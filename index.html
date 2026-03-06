@@ -3,42 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Painel de Julgamento v2.0</title>
+    <title>Painel de Julgamento v3.0</title>
     <link rel="stylesheet" href="style.css" id="main-css">
 </head>
 <body>
 
     <div id="json-importer">
-        <h2 style="color: #0f172a; margin-bottom: 10px;">Gerador de Painel de Julgamento</h2>
-        <p style="color: #64748b; margin-bottom: 25px;">Cole abaixo o JSON gerado pelo Gemini:</p>
-        <textarea id="json-input" placeholder='Cole o código JSON aqui...'></textarea>
-        <button class="btn-generate" onclick="generatePanel()">🚀 Gerar Painel Visual</button>
+        <h2 style="color: #0f172a; margin-bottom: 10px;">Gerador de Painel - Visualização v3</h2>
+        <p style="color: #64748b; margin-bottom: 20px;">Cole o JSON gerado pelo Gemini abaixo:</p>
+        <textarea id="json-input" placeholder='Cole o JSON aqui...'></textarea>
+        <button class="btn-generate" onclick="generatePanel()">🚀 Gerar Painel</button>
     </div>
 
     <div class="container" id="panel-container">
+        
         <header>
             <div class="header-content">
-                <small class="header-label">PAINEL COLABORATIVO</small>
-                <h1 id="process-id">Processo: ...</h1>
-                <div id="parties-display"></div>
+                <small class="header-label">TRIBUNAL REGIONAL DO TRABALHO - PORTÁTIL</small>
+                <h1 id="process-id">0000000-00.0000.5.23.0000</h1>
+                <div id="parties-display" style="font-weight: 500; margin-top:5px;">Partes: ...</div>
             </div>
             <div class="header-actions">
-                <button class="btn-save-file" onclick="downloadBundledHTML()">💾 Baixar Cópia</button>
+                <button class="btn-save-file" onclick="downloadBundledHTML()">💾 Salvar e Baixar Cópia</button>
             </div>
         </header>
 
+        <div class="section-title">1. Admissibilidade & Pressupostos</div>
+        <div class="checklist-container" id="admissibility-list">
+            <div id="adm-general"></div>
+            
+            <div class="checklist-item representation-row" style="display:block;">
+                <div style="width: 100%;">
+                    <div style="font-weight: 600; font-size: 0.9rem; margin-bottom: 8px; color: #334155;">Representação Processual</div>
+                    <div class="rep-grid">
+                        <div class="rep-col">
+                            <label class="rep-label"><input type="checkbox" class="chk-input" id="chk-rep-autor"> Autor:</label>
+                            <input type="text" class="input-details" id="input-rep-autor" placeholder="ID Procuração..." oninput="this.setAttribute('value', this.value)">
+                        </div>
+                        <div class="rep-col">
+                            <label class="rep-label"><input type="checkbox" class="chk-input" id="chk-rep-reu"> Réu:</label>
+                            <input type="text" class="input-details" id="input-rep-reu" placeholder="ID Procuração..." oninput="this.setAttribute('value', this.value)">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div id="theme-panel"></div>
 
-        <div class="section-title">1. Admissibilidade</div>
-        <div class="checklist-container" id="admissibility-list"></div>
-
-        <div class="section-title">2. Ordem de Julgamento</div>
+        <div class="section-title">2. Trilha de Julgamento (Arraste para Reordenar)</div>
         <div class="checklist-container" id="sortable-list"></div>
 
-        <div class="section-title">3. Observações / Pendências</div>
+        <div class="section-title">3. Notas de Voto & Fundamentação</div>
         <div class="checklist-container" id="obs-list"></div>
-        
-        <button class="btn-add-row" onclick="addNewObs()">+ NOVA OBSERVAÇÃO</button>
+        <button class="btn-add-row" onclick="addNewObs()">+ ADICIONAR NOTA DE JULGAMENTO</button>
+
     </div>
 
     <script src="script.js"></script>
