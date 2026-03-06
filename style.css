@@ -7,28 +7,28 @@
   --theme-orange: #f97316; --theme-bg-orange: #ffedd5; --theme-border-orange: #fed7aa;
 }
 
+/* Correção do comportamento de rolagem no Body */
 body { 
   font-family: 'Segoe UI', Roboto, sans-serif; 
   background-color: var(--bg-page); 
   color: var(--text-main); 
   margin: 0; 
   padding: 20px; 
-  /* PLANO: Alterado de flex para block para permitir rolagem nativa */
-  display: block; 
+  display: block; /* Permite o fluxo normal do documento e rolagem */
+  overflow-y: auto; /* Força a disponibilidade da barra de rolagem vertical */
 }
 
+/* Container atualizado para não cortar conteúdo */
 .container { 
   max-width: 950px; 
   width: 100%; 
   background: var(--bg-card); 
   border-radius: 12px; 
   box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
-  /* PLANO: Alterado de hidden para visible e centralizado com margin auto */
-  overflow: visible; 
+  overflow: visible; /* Impede que o container corte o conteúdo interno */
   margin: 0 auto;
   padding-bottom: 50px; 
   display: none; 
-  /* PLANO: Espaço extra no rodapé para mobile */
   margin-bottom: 40px;
 }
 
@@ -41,7 +41,6 @@ body {
   border-radius: 12px; 
   box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
   text-align: center; 
-  /* PLANO: Ajuste de margem para não colar no topo */
   margin: 20px auto;
 }
 
@@ -66,8 +65,25 @@ header { background-color: var(--primary-navy); color: white; padding: 25px 40px
 .rep-label { display: flex; align-items: center; font-weight: 600; font-size: 0.85rem; margin-right: 10px; white-space: nowrap; cursor: pointer; }
 .input-details { border: none; background: transparent; color: var(--text-sub); font-family: inherit; font-size: 0.85rem; flex: 1; outline: none; }
 
+/* Transformando a tag visualmente em um botão clicável */
+.badge { 
+  font-size: 0.65rem; 
+  font-weight: 700; 
+  padding: 4px 8px; 
+  border-radius: 4px; 
+  text-transform: uppercase; 
+  border: 1px solid transparent; 
+  cursor: pointer; /* Feedback de interatividade (Mãozinha) */
+  user-select: none; /* Evita seleção acidental do texto */
+  margin-left: 8px; 
+  transition: opacity 0.2s ease; /* Suavidade na troca */
+}
+
+.badge:hover {
+  opacity: 0.8; /* Leve indicação de foco ao passar o mouse */
+}
+
 /* Badges (Partes) */
-.badge { font-size: 0.65rem; font-weight: 700; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; border: 1px solid transparent; cursor: pointer; user-select: none; margin-left: 8px; }
 .badge-author { background: var(--author-bg); color: var(--author-color); border-color: var(--author-border); }
 .badge-defendant { background: var(--defendant-bg); color: var(--defendant-color); border-color: var(--defendant-border); }
 .badge-joint { background: var(--joint-bg); color: var(--joint-color); border-color: var(--joint-border); }
