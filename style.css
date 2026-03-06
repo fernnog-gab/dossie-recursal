@@ -53,8 +53,13 @@ header { background-color: var(--primary-navy); color: white; padding: 25px 40px
 .theme-card-top { background: var(--theme-bg-orange); border-left: 4px solid var(--theme-orange); padding: 12px 20px; margin: 10px 40px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;}
 .theme-info { font-size: 0.85rem; color: #9a3412; }
 
+/* Novo ícone de tema (Injetado via JS) */
+.icon-theme { vertical-align: middle; margin-right: 6px; color: #9a3412; }
+
 /* Botoes */
 .btn-save-file { background: var(--success-green); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; }
+.btn-save-file svg { margin-right: 6px; } /* Ajuste fino para SVG */
+
 .btn-add-row { display: block; width: calc(100% - 80px); margin: 15px 40px; padding: 10px; background: #fff; border: 1px dashed #cbd5e1; border-radius: 8px; color: #64748b; font-weight: 600; cursor: pointer; text-align: center; font-size: 0.8rem;}
 
 /* Drag & Drop */
