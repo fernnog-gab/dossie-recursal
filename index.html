@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Painel de Julgamento</title>
+    <link rel="stylesheet" href="style.css" id="main-css">
+</head>
+<body>
+
+    <div id="json-importer">
+        <h2 style="color: #0f172a; margin-bottom: 10px;">Gerador de Painel de Julgamento</h2>
+        <p style="color: #64748b; margin-bottom: 25px;">Cole abaixo o JSON gerado pelo Gemini:</p>
+        <textarea id="json-input" placeholder='Cole o código JSON aqui...'></textarea>
+        <button class="btn-generate" onclick="generatePanel()">🚀 Gerar Painel Visual</button>
+    </div>
+
+    <div class="container" id="panel-container">
+        <header>
+            <div class="header-content">
+                <small class="header-label">PAINEL COLABORATIVO</small>
+                <h1 id="process-id">Processo: ...</h1>
+                <div id="parties-display"></div>
+            </div>
+            <div class="header-actions">
+                <button class="btn-save-file" onclick="downloadBundledHTML()">💾 Baixar Cópia (Único Arquivo)</button>
+            </div>
+        </header>
+
+        <div class="section-title">1. Admissibilidade</div>
+        <div class="checklist-container" id="admissibility-list"></div>
+
+        <div class="section-title">2. Ordem de Julgamento</div>
+        <div class="checklist-container" id="sortable-list"></div>
+
+        <div class="section-title">3. Observações / Pendências</div>
+        <div class="checklist-container" id="obs-list"></div>
+        
+        <button class="btn-add-row" onclick="addNewObs()">+ NOVA OBSERVAÇÃO</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
