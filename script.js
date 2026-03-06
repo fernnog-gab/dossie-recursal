@@ -1,95 +1,109 @@
-// --- 1. LÓGICA DE GERAÇÃO (Lê o JSON e cria o HTML) ---
+// --- 1. GERAÇÃO DO PAINEL ---
 function generatePanel() {
     try {
         const input = document.getElementById('json-input').value;
         const data = JSON.parse(input);
 
         // A. Cabeçalho
-        document.getElementById('process-id').innerText = `Processo: ${data.processo || 'S/N'}`;
-        document.getElementById('parties-display').innerText = `${data.recorrente} x ${data.recorrido}`;
+        document.getElementById('process-id').innerText = data.processo || 'S/N';
+        document.getElementById('parties-display').innerText = `Partes: ${data.recorrente} x ${data.recorrido}`;
 
-        // B. PAINEL DE TEMAS (NOVO)
-        const themePanel = document.getElementById('theme-panel');
-        themePanel.innerHTML = ''; // Limpa anterior
-        
-        // Verifica se existe o campo E se ele tem itens dentro
-        if (data.temas_vinculantes && data.temas_vinculantes.length > 0) {
-            themePanel.style.display = 'block';
-            data.temas_vinculantes.forEach(tema => {
-                themePanel.innerHTML += `
-                    <div class="theme-card">
-                        <div class="theme-title">🚨 ${tema.numero || 'Tema Vinculante'}</div>
-                        <div class="theme-desc">${tema.descricao || 'Sem descrição.'}</div>
-                        <div class="theme-impact">Impacto: ${tema.impacto || 'Não informado.'}</div>
-                    </div>
-                `;
-            });
-        } else {
-            themePanel.style.display = 'none'; // Esconde se não tiver temas
-        }
-
-        // C. Admissibilidade
-        const admContainer = document.getElementById('admissibility-list');
-        admContainer.innerHTML = ''; 
+        // B. Admissibilidade Geral
+        const admGenContainer = document.getElementById('adm-general');
+        admGenContainer.innerHTML = '';
         const admItems = [
             { t: 'Tempestividade', v: data.admissibilidade?.tempestividade },
-            { t: 'Preparo', v: data.admissibilidade?.preparo },
-            { t: 'Representação', v: data.admissibilidade?.representacao }
+            { t: 'Preparo Recursal', v: data.admissibilidade?.preparo }
         ];
-        
         admItems.forEach(item => {
-            admContainer.innerHTML += createRowHTML(item.t, item.v);
+            admGenContainer.innerHTML += createRowHTML(item.t, item.v);
         });
 
-        // D. Tópicos
+        // C. Representação (Campos Específicos)
+        // Preenche os valores iniciais vindos do JSON nos inputs e checks
+        const repData = data.admissibilidade?.representacao || {};
+        setupRepField('autor', repData.autor);
+        setupRepField('reu', repData.reu);
+
+        // D. Painel de Temas (Topo)
+        const themePanel = document.getElementById('theme-panel');
+        themePanel.innerHTML = '';
+        if (data.temas_vinculantes && data.temas_vinculantes.length > 0) {
+            data.temas_vinculantes.forEach(tema => {
+                themePanel.innerHTML += `
+                    <div class="theme-card-top">
+                        <div class="theme-info"><strong>⚖️ ${tema.numero}:</strong> ${tema.descricao}</div>
+                        <div style="font-size:0.7rem; background: #fff; padding:2px 6px; border-radius:4px;">${tema.impacto}</div>
+                    </div>`;
+            });
+        }
+
+        // E. Trilha de Julgamento (Com Badges de Tema)
         const topicContainer = document.getElementById('sortable-list');
         topicContainer.innerHTML = '';
         
-        if(data.topicos && data.topicos.length > 0) {
+        if(data.topicos) {
             data.topicos.forEach(topic => {
-                let badgeClass = 'badge-author';
-                let badgeText = 'AUTOR';
-                if(topic.autor === 'RÉU') { badgeClass = 'badge-defendant'; badgeText = 'RÉU'; }
-                if(topic.autor === 'AMBOS') { badgeClass = 'badge-joint'; badgeText = 'AMBOS'; }
+                // Define Parte (Badge Direita)
+                let partyClass = 'badge-author'; let partyText = 'AUTOR';
+                if(topic.autor === 'RÉU') { partyClass = 'badge-defendant'; partyText = 'RÉU'; }
+                if(topic.autor === 'AMBOS') { partyClass = 'badge-joint'; partyText = 'AMBOS'; }
+
+                // Define Badge de TEMA (Visual Feedback - Laranja)
+                let themeBadgeHTML = '';
+                if(topic.tema_numero) {
+                    themeBadgeHTML = `<span class="badge-theme-tag">${topic.tema_numero}</span>`;
+                }
 
                 topicContainer.innerHTML += `
                     <div class="checklist-item" draggable="true">
                         <input type="checkbox" class="chk-input" onchange="toggleRow(this)">
                         <div class="item-content">
-                            <span class="badge badge-tag">${topic.tag}</span>
                             <span class="item-title" title="${topic.resumo}">${topic.titulo}</span>
                         </div>
-                        <span class="badge ${badgeClass}" onclick="rotateBadge(this)">${badgeText}</span>
+                        ${themeBadgeHTML}
+                        <span class="badge ${partyClass}" onclick="rotateBadge(this)">${partyText}</span>
                     </div>
                 `;
             });
         }
 
-        // Trocar telas
+        // Troca Tela
         document.getElementById('json-importer').style.display = 'none';
         document.getElementById('panel-container').style.display = 'block';
         setupDrag();
 
     } catch (e) {
-        alert("Erro ao ler JSON: " + e.message);
+        alert("Erro no JSON: " + e.message);
     }
 }
 
-// Helper para criar linhas padrão
+// Helper para Representação
+function setupRepField(type, dataObj) {
+    if(!dataObj) return;
+    const chk = document.getElementById(`chk-rep-${type}`);
+    const input = document.getElementById(`input-rep-${type}`);
+    
+    if(dataObj.status) chk.checked = true;
+    if(dataObj.obs) {
+        input.value = dataObj.obs;
+        input.setAttribute('value', dataObj.obs); // Persistência
+    }
+}
+
+// Helper Linhas Comuns
 function createRowHTML(title, value = '') {
     return `
         <div class="checklist-item">
-            <input type="checkbox" class="chk-input" onchange="toggleRow(this)">
-            <div class="item-content">
+            <input type="checkbox" class="chk-input" onchange="toggleRow(this)" checked> <div class="item-content">
                 <span class="item-title">${title}</span>
-                <input type="text" class="input-details" value="${value}" placeholder="Detalhes..." oninput="this.setAttribute('value', this.value)">
+                <input type="text" class="input-details" value="${value}" oninput="this.setAttribute('value', this.value)">
             </div>
         </div>`;
 }
 
-// --- 2. FUNÇÕES INTERATIVAS ---
+// --- Lógica de Interação ---
 const badgeTypes = [ {c:'badge-author', t:'AUTOR'}, {c:'badge-defendant', t:'RÉU'}, {c:'badge-joint', t:'AMBOS'} ];
-
 function rotateBadge(el) {
     let currentIdx = 0;
     if(el.classList.contains('badge-defendant')) currentIdx = 1;
@@ -111,60 +125,61 @@ function addNewObs() {
     div.innerHTML = `
         <input type="checkbox" class="chk-input" onchange="toggleRow(this)">
         <div style="flex:1;">
-            <input type="text" class="input-details" placeholder="Digite a observação..." oninput="this.setAttribute('value', this.value)" style="width:100%">
+            <input type="text" class="input-details" placeholder="Escreva aqui..." oninput="this.setAttribute('value', this.value)" style="width:100%">
         </div>
         <button onclick="this.parentElement.remove()" style="border:none; background:none; cursor:pointer; color:#cbd5e1;">✕</button>
     `;
     container.appendChild(div);
 }
 
-// --- 3. EXPORTAÇÃO INTELIGENTE ---
+// --- EXPORTAÇÃO (PERSISTÊNCIA COMPLETA) ---
 async function downloadBundledHTML() {
+    // 1. Persistir inputs comuns
     document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked ? c.setAttribute('checked', '') : c.removeAttribute('checked'));
     document.querySelectorAll('input[type="text"]').forEach(i => i.setAttribute('value', i.value));
 
+    // 2. Clonar e Limpar
     const clone = document.documentElement.cloneNode(true);
-
     const importer = clone.querySelector('#json-importer');
     if(importer) importer.remove();
-    const panel = clone.querySelector('#panel-container');
-    if(panel) panel.style.display = 'block';
+    clone.querySelector('#panel-container').style.display = 'block';
 
     try {
+        // Embed CSS
         const cssLink = document.getElementById('main-css');
         if (cssLink) {
             const cssResponse = await fetch(cssLink.href);
-            const cssText = await cssResponse.text();
             const styleTag = document.createElement('style');
-            styleTag.textContent = cssText;
+            styleTag.textContent = await cssResponse.text();
             const cloneLink = clone.querySelector('link[href="style.css"]');
             if(cloneLink) cloneLink.replaceWith(styleTag);
         }
 
+        // Embed JS
         const scriptResponse = await fetch('script.js');
-        const scriptText = await scriptResponse.text();
         const scriptTag = document.createElement('script');
-        scriptTag.textContent = scriptText;
+        scriptTag.textContent = await scriptResponse.text();
         const cloneScript = clone.querySelector('script[src="script.js"]');
         if(cloneScript) cloneScript.replaceWith(scriptTag);
 
+        // Download
         const blob = new Blob([clone.outerHTML], {type: 'text/html'});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        const proc = document.getElementById('process-id').innerText.replace(/[^0-9]/g, '').slice(0,15) || 'Processo';
-        a.download = `Painel_${proc}.html`;
+        const proc = document.getElementById('process-id').innerText.replace(/[^0-9]/g, '').slice(0,15) || 'Dossie';
+        a.download = `Dossie_${proc}.html`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
 
     } catch (e) {
-        alert("Erro ao empacotar arquivos: " + e.message);
+        alert("Erro ao empacotar: " + e.message);
     }
 }
 
-// --- 4. DRAG AND DROP ---
+// Drag Setup
 function setupDrag() {
     const list = document.getElementById("sortable-list");
     let dragged = null;
