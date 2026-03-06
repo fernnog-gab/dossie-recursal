@@ -1,4 +1,4 @@
-    // --- CONSTANTES E ÍCONES ---
+// --- CONSTANTES E ÍCONES ---
 const SVG_BALANCE = `<svg class="icon-theme" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 6px; color: #9a3412;"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>`;
 
 const badgeTypes = [ 
@@ -92,7 +92,7 @@ function renderContent(data) {
                         <span class="item-title" title="${topic.resumo}">${topic.titulo}</span>
                     </div>
                     ${themeBadgeHTML}
-                    <span class="badge ${partyClass}" onclick="rotateBadge(this); autoSave();">${partyText}</span>
+                    <span class="badge ${partyClass}" onclick="rotateBadge(this);">${partyText}</span>
                 </div>
             `;
         });
@@ -195,14 +195,27 @@ function createRowHTML(title, value = '') {
         </div>`;
 }
 
+// [ATUALIZADO] Função robusta para alternância de Badges
 function rotateBadge(el) {
-    let currentIdx = 0;
-    if(el.classList.contains('badge-defendant')) currentIdx = 1;
-    else if(el.classList.contains('badge-joint')) currentIdx = 2;
+    // Mapeamento explícito de estados para evitar erros de leitura de classe
+    const states = ['badge-author', 'badge-defendant', 'badge-joint'];
+    const texts = ['AUTOR', 'RÉU', 'AMBOS'];
     
-    const next = badgeTypes[(currentIdx + 1) % 3];
-    el.className = `badge ${next.c}`;
-    el.innerText = next.t;
+    // Identifica o índice atual baseado na classe presente
+    let currentIdx = 0;
+    if (el.classList.contains('badge-defendant')) currentIdx = 1;
+    else if (el.classList.contains('badge-joint')) currentIdx = 2;
+    
+    // Calcula o próximo estado
+    const nextIdx = (currentIdx + 1) % 3;
+    
+    // Limpa classes antigas e aplica a nova
+    el.classList.remove(...states);
+    el.classList.add(states[nextIdx]);
+    el.innerText = texts[nextIdx];
+    
+    // Força o salvamento imediato após a interação visual
+    autoSave();
 }
 
 function toggleRow(chk) {
@@ -226,11 +239,13 @@ function addNewObs() {
 }
 
 // --- 4. EXPORTAÇÃO E PERSISTÊNCIA COMPLETA ---
+// [ATUALIZADO] Função de Download com "carimbo" de estado visual
 async function downloadBundledHTML() {
-    // Persistir estados atuais nos atributos antes da clonagem
-    document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked ? c.setAttribute('checked', '') : c.removeAttribute('checked'));
+    // 1. Persistir estados de inputs (Checkbox e Text)
+    document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked ? c.setAttribute('checked', 'checked') : c.removeAttribute('checked'));
     document.querySelectorAll('input[type="text"]').forEach(i => i.setAttribute('value', i.value));
-
+    
+    // 2. Persistir o estado atual dos BADGES (Visual atual será clonado)
     const clone = document.documentElement.cloneNode(true);
     
     // Configura o clone para abrir já no painel
@@ -253,11 +268,11 @@ async function downloadBundledHTML() {
             } catch (err) { console.warn("CSS externo não acessível para embutir."); }
         }
 
-        // Embed JS (Embutir este próprio script no arquivo baixado)
+        // Embed JS (Garante que o script atual seja levado junto)
         const scriptTag = document.createElement('script');
-        scriptTag.textContent = document.querySelector('script[src*="script.js"]')?.textContent || ""; 
-        // Nota: Em ambiente local (file://), o fetch do script.js pode falhar. 
-        // Usamos o conteúdo da tag script se disponível ou uma referência.
+        // Usa o conteúdo do script da página ativa
+        scriptTag.textContent = document.querySelector('script[src*="script.js"]')?.textContent || 
+                                document.scripts[document.scripts.length - 1].textContent;
 
         const cloneScript = clone.querySelector('script[src*="script.js"]');
         if(cloneScript) cloneScript.replaceWith(scriptTag);
