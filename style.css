@@ -7,11 +7,44 @@
   --theme-orange: #f97316; --theme-bg-orange: #ffedd5; --theme-border-orange: #fed7aa;
 }
 
-body { font-family: 'Segoe UI', Roboto, sans-serif; background-color: var(--bg-page); color: var(--text-main); margin: 0; padding: 20px; display: flex; justify-content: center; }
-.container { max-width: 950px; width: 100%; background: var(--bg-card); border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow: hidden; padding-bottom: 50px; display: none; }
+body { 
+  font-family: 'Segoe UI', Roboto, sans-serif; 
+  background-color: var(--bg-page); 
+  color: var(--text-main); 
+  margin: 0; 
+  padding: 20px; 
+  /* PLANO: Alterado de flex para block para permitir rolagem nativa */
+  display: block; 
+}
+
+.container { 
+  max-width: 950px; 
+  width: 100%; 
+  background: var(--bg-card); 
+  border-radius: 12px; 
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
+  /* PLANO: Alterado de hidden para visible e centralizado com margin auto */
+  overflow: visible; 
+  margin: 0 auto;
+  padding-bottom: 50px; 
+  display: none; 
+  /* PLANO: Espaço extra no rodapé para mobile */
+  margin-bottom: 40px;
+}
 
 /* Importador */
-#json-importer { max-width: 800px; width: 100%; background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
+#json-importer { 
+  max-width: 800px; 
+  width: 100%; 
+  background: #fff; 
+  padding: 40px; 
+  border-radius: 12px; 
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+  text-align: center; 
+  /* PLANO: Ajuste de margem para não colar no topo */
+  margin: 20px auto;
+}
+
 textarea { width: 100%; height: 200px; padding: 15px; border: 2px solid #cbd5e1; border-radius: 8px; font-family: monospace; font-size: 0.9rem; margin-bottom: 20px; resize: vertical; box-sizing: border-box; }
 .btn-generate { background: var(--success-green); color: white; padding: 12px 30px; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; font-weight: bold; }
 
