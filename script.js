@@ -4,11 +4,31 @@ function generatePanel() {
         const input = document.getElementById('json-input').value;
         const data = JSON.parse(input);
 
-        // Preencher Cabeçalho
+        // A. Cabeçalho
         document.getElementById('process-id').innerText = `Processo: ${data.processo || 'S/N'}`;
         document.getElementById('parties-display').innerText = `${data.recorrente} x ${data.recorrido}`;
 
-        // Preencher Admissibilidade
+        // B. PAINEL DE TEMAS (NOVO)
+        const themePanel = document.getElementById('theme-panel');
+        themePanel.innerHTML = ''; // Limpa anterior
+        
+        // Verifica se existe o campo E se ele tem itens dentro
+        if (data.temas_vinculantes && data.temas_vinculantes.length > 0) {
+            themePanel.style.display = 'block';
+            data.temas_vinculantes.forEach(tema => {
+                themePanel.innerHTML += `
+                    <div class="theme-card">
+                        <div class="theme-title">🚨 ${tema.numero || 'Tema Vinculante'}</div>
+                        <div class="theme-desc">${tema.descricao || 'Sem descrição.'}</div>
+                        <div class="theme-impact">Impacto: ${tema.impacto || 'Não informado.'}</div>
+                    </div>
+                `;
+            });
+        } else {
+            themePanel.style.display = 'none'; // Esconde se não tiver temas
+        }
+
+        // C. Admissibilidade
         const admContainer = document.getElementById('admissibility-list');
         admContainer.innerHTML = ''; 
         const admItems = [
@@ -21,7 +41,7 @@ function generatePanel() {
             admContainer.innerHTML += createRowHTML(item.t, item.v);
         });
 
-        // Preencher Tópicos
+        // D. Tópicos
         const topicContainer = document.getElementById('sortable-list');
         topicContainer.innerHTML = '';
         
@@ -98,48 +118,36 @@ function addNewObs() {
     container.appendChild(div);
 }
 
-// --- 3. EXPORTAÇÃO INTELIGENTE (O SEGREDO) ---
-// Esta função "busca" o CSS e JS externos e os coloca DENTRO do HTML antes de baixar
+// --- 3. EXPORTAÇÃO INTELIGENTE ---
 async function downloadBundledHTML() {
-    // 1. Atualizar atributos (persistência de inputs/checks)
     document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked ? c.setAttribute('checked', '') : c.removeAttribute('checked'));
     document.querySelectorAll('input[type="text"]').forEach(i => i.setAttribute('value', i.value));
 
-    // 2. Clonar o documento para modificar sem estragar a tela atual
     const clone = document.documentElement.cloneNode(true);
 
-    // 3. Remover a tela de importação do clone (para o arquivo final já abrir no painel)
     const importer = clone.querySelector('#json-importer');
     if(importer) importer.remove();
     const panel = clone.querySelector('#panel-container');
     if(panel) panel.style.display = 'block';
 
     try {
-        // 4. EMBUTIR CSS (Substitui <link> por <style>)
         const cssLink = document.getElementById('main-css');
         if (cssLink) {
             const cssResponse = await fetch(cssLink.href);
             const cssText = await cssResponse.text();
-            
             const styleTag = document.createElement('style');
             styleTag.textContent = cssText;
-            
-            // Procura o link no clone e substitui
             const cloneLink = clone.querySelector('link[href="style.css"]');
             if(cloneLink) cloneLink.replaceWith(styleTag);
         }
 
-        // 5. EMBUTIR JS (Substitui <script src> por <script inline>)
         const scriptResponse = await fetch('script.js');
         const scriptText = await scriptResponse.text();
-        
         const scriptTag = document.createElement('script');
         scriptTag.textContent = scriptText;
-        
         const cloneScript = clone.querySelector('script[src="script.js"]');
         if(cloneScript) cloneScript.replaceWith(scriptTag);
 
-        // 6. Gerar e Baixar
         const blob = new Blob([clone.outerHTML], {type: 'text/html'});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -152,7 +160,7 @@ async function downloadBundledHTML() {
         URL.revokeObjectURL(url);
 
     } catch (e) {
-        alert("Erro ao empacotar arquivos: " + e.message + "\nCertifique-se de estar rodando em um servidor (Github Pages) e não direto do arquivo.");
+        alert("Erro ao empacotar arquivos: " + e.message);
     }
 }
 
