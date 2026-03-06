@@ -7,13 +7,36 @@ const badgeTypes = [
     {c:'badge-joint', t:'AMBOS'} 
 ];
 
+// --- 0. INJEÇÃO DE ESTILOS (PRIORIDADE 1: ROLAGEM E UX) ---
+function injectGlobalStyles() {
+    const style = document.createElement('style');
+    style.textContent = `
+        body { 
+            display: block !important; 
+            overflow-y: auto !important; 
+            height: auto !important; 
+        }
+        .container { 
+            overflow: visible !important; 
+            padding-bottom: 60px; 
+        }
+        .badge { 
+            cursor: pointer; 
+            user-select: none; 
+            transition: opacity 0.2s ease; 
+        }
+        .badge:hover { opacity: 0.8; }
+    `;
+    document.head.appendChild(style);
+}
+
 // --- 1. GERAÇÃO E DOWNLOAD IMEDIATO ---
 async function generatePanel() {
     try {
         const input = document.getElementById('json-input').value;
         const data = JSON.parse(input);
 
-        // A. Preenchimento de Cabeçalho (Necessário para o ID do processo no download)
+        // A. Preenchimento de Cabeçalho
         document.getElementById('process-id').innerText = data.processo || 'S/N';
         document.getElementById('parties-display').innerText = `Partes: ${data.recorrente} x ${data.recorrido}`;
 
@@ -21,7 +44,6 @@ async function generatePanel() {
         renderContent(data);
 
         // C. Fluxo de Download Imediato
-        // O gerador permanece aberto; o arquivo processado é baixado para uso.
         await downloadBundledHTML();
         
         // Feedback visual no botão de geração
@@ -42,9 +64,8 @@ async function generatePanel() {
     }
 }
 
-// Função modular para renderizar dados no DOM
 function renderContent(data) {
-    // 1. Painel de Temas (Injeção de SVG)
+    // 1. Painel de Temas
     const themePanel = document.getElementById('theme-panel');
     themePanel.innerHTML = '';
     if (data.temas_vinculantes && data.temas_vinculantes.length > 0) {
@@ -92,7 +113,9 @@ function renderContent(data) {
                         <span class="item-title" title="${topic.resumo}">${topic.titulo}</span>
                     </div>
                     ${themeBadgeHTML}
-                    <span class="badge ${partyClass}" onclick="rotateBadge(this);">${partyText}</span>
+                    <span class="badge ${partyClass}" 
+                          onclick="rotateBadge(this);" 
+                          title="Clique para alternar entre AUTOR, RÉU e AMBOS">${partyText}</span>
                 </div>
             `;
         });
@@ -102,7 +125,8 @@ function renderContent(data) {
 
 // --- 2. PERSISTÊNCIA (AUTO-SAVE) ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Ativa o carregamento automático apenas se não estivermos na tela de importação (ou seja, no arquivo gerado)
+    injectGlobalStyles(); // Aplica correções de rolagem e cursor
+    
     const importer = document.getElementById('json-importer');
     if (!importer || importer.style.display === 'none') {
         loadState();
@@ -136,7 +160,6 @@ function loadState() {
     try {
         const state = JSON.parse(saved);
         
-        // Restaurar Checkboxes
         const checks = document.querySelectorAll('.chk-input');
         state.checks.forEach((val, i) => { 
             if(checks[i]) { 
@@ -145,11 +168,9 @@ function loadState() {
             } 
         });
 
-        // Restaurar Inputs de Texto
         const inputs = document.querySelectorAll('input[type="text"]');
         state.inputs.forEach((val, i) => { if(inputs[i]) inputs[i].value = val; });
 
-        // Restaurar Badges
         const badges = document.querySelectorAll('.badge');
         state.badges.forEach((val, i) => { 
             if(badges[i]) { 
@@ -163,7 +184,6 @@ function loadState() {
 }
 
 function setupAutoSaveListeners() {
-    // Captura mudanças em inputs e áreas de texto dinamicamente
     document.addEventListener('input', (e) => {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
             autoSave();
@@ -195,26 +215,21 @@ function createRowHTML(title, value = '') {
         </div>`;
 }
 
-// [ATUALIZADO] Função robusta para alternância de Badges
+// [ATUALIZADO] Função robusta para alternância de Badges (Prioridade 1)
 function rotateBadge(el) {
-    // Mapeamento explícito de estados para evitar erros de leitura de classe
     const states = ['badge-author', 'badge-defendant', 'badge-joint'];
     const texts = ['AUTOR', 'RÉU', 'AMBOS'];
     
-    // Identifica o índice atual baseado na classe presente
     let currentIdx = 0;
     if (el.classList.contains('badge-defendant')) currentIdx = 1;
     else if (el.classList.contains('badge-joint')) currentIdx = 2;
     
-    // Calcula o próximo estado
     const nextIdx = (currentIdx + 1) % 3;
     
-    // Limpa classes antigas e aplica a nova
     el.classList.remove(...states);
     el.classList.add(states[nextIdx]);
     el.innerText = texts[nextIdx];
     
-    // Força o salvamento imediato após a interação visual
     autoSave();
 }
 
@@ -232,23 +247,21 @@ function addNewObs() {
         <div style="flex:1;">
             <input type="text" class="input-details" placeholder="Escreva aqui..." oninput="this.setAttribute('value', this.value); autoSave();" style="width:100%">
         </div>
-        <button onclick="this.parentElement.remove(); autoSave();" style="border:none; background:none; cursor:pointer; color:#cbd5e1;">✕</button>
+        <button onclick="this.parentElement.remove(); autoSave();" 
+                title="Remover observação"
+                style="border:none; background:none; cursor:pointer; color:#cbd5e1;">✕</button>
     `;
     container.appendChild(div);
     autoSave();
 }
 
 // --- 4. EXPORTAÇÃO E PERSISTÊNCIA COMPLETA ---
-// [ATUALIZADO] Função de Download com "carimbo" de estado visual
 async function downloadBundledHTML() {
-    // 1. Persistir estados de inputs (Checkbox e Text)
     document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked ? c.setAttribute('checked', 'checked') : c.removeAttribute('checked'));
     document.querySelectorAll('input[type="text"]').forEach(i => i.setAttribute('value', i.value));
     
-    // 2. Persistir o estado atual dos BADGES (Visual atual será clonado)
     const clone = document.documentElement.cloneNode(true);
     
-    // Configura o clone para abrir já no painel
     const importer = clone.querySelector('#json-importer');
     if(importer) importer.remove();
     
@@ -256,7 +269,6 @@ async function downloadBundledHTML() {
     if(container) container.style.display = 'block';
 
     try {
-        // Embed CSS (Tenta buscar o estilo local)
         const cssLink = document.getElementById('main-css');
         if (cssLink) {
             try {
@@ -265,19 +277,16 @@ async function downloadBundledHTML() {
                 styleTag.textContent = await cssResponse.text();
                 const cloneLink = clone.querySelector('link[href*="style.css"]');
                 if(cloneLink) cloneLink.replaceWith(styleTag);
-            } catch (err) { console.warn("CSS externo não acessível para embutir."); }
+            } catch (err) { console.warn("CSS externo não acessível."); }
         }
 
-        // Embed JS (Garante que o script atual seja levado junto)
         const scriptTag = document.createElement('script');
-        // Usa o conteúdo do script da página ativa
         scriptTag.textContent = document.querySelector('script[src*="script.js"]')?.textContent || 
                                 document.scripts[document.scripts.length - 1].textContent;
 
         const cloneScript = clone.querySelector('script[src*="script.js"]');
         if(cloneScript) cloneScript.replaceWith(scriptTag);
 
-        // Download do arquivo
         const blob = new Blob([clone.outerHTML], {type: 'text/html'});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -309,7 +318,7 @@ function setupDrag() {
     list.addEventListener("dragend", e => { 
         setTimeout(()=>e.target.classList.remove("dragging"),0); 
         dragged = null;
-        autoSave(); // Salva a nova ordem
+        autoSave();
     });
     
     list.addEventListener("dragover", e => {
