@@ -173,7 +173,10 @@ function loadState() {
         state.checks.forEach((val, i) => { 
             if(checks[i]) { 
                 checks[i].checked = val; 
-                if(val) checks[i].closest('.checklist-item').classList.add('completed');
+                if(val) {
+                    const item = checks[i].closest('.checklist-item');
+                    if(item) item.classList.add('completed');
+                }
             } 
         });
 
@@ -187,6 +190,8 @@ function loadState() {
                 badges[i].innerText = val.text; 
             } 
         });
+
+        checkRepStatus(); // Garante a cor correta da representação ao carregar
     } catch (e) {
         console.error("Erro ao carregar estado:", e);
     }
@@ -206,20 +211,43 @@ function setupRepField(type, dataObj) {
     const chk = document.getElementById(`chk-rep-${type}`);
     const input = document.getElementById(`input-rep-${type}`);
     
-    if(dataObj.status) chk.checked = true;
-    if(dataObj.obs) {
+    if(chk && dataObj.status) chk.checked = true;
+    if(input && dataObj.obs) {
         input.value = dataObj.obs;
         input.setAttribute('value', dataObj.obs);
+    }
+    checkRepStatus(); // Atualiza o status visual da linha de representação
+}
+
+function checkRepStatus() {
+    const chkAutor = document.getElementById('chk-rep-autor');
+    const chkReu = document.getElementById('chk-rep-reu');
+    const row = document.getElementById('rep-row-main');
+
+    if (chkAutor && chkReu && row) {
+        // Regra de Negócio: Linha fica verde apenas se AMBOS estiverem marcados
+        if (chkAutor.checked && chkReu.checked) {
+            row.classList.add('completed');
+        } else {
+            row.classList.remove('completed');
+        }
+        autoSave();
     }
 }
 
 function createRowHTML(title, value = '') {
+    // Layout aprimorado: Input ocupa linha cheia abaixo do título
     return `
-        <div class="checklist-item">
-            <input type="checkbox" class="chk-input" onchange="toggleRow(this); autoSave();" checked> 
-            <div class="item-content">
-                <span class="item-title">${title}</span>
-                <input type="text" class="input-details" value="${value}" oninput="this.setAttribute('value', this.value); autoSave();">
+        <div class="checklist-item" style="align-items: flex-start; flex-wrap: wrap;">
+            <input type="checkbox" class="chk-input" style="margin-top: 5px;" onchange="toggleRow(this); autoSave();" checked> 
+            <div class="item-content" style="display: block; width: calc(100% - 40px);">
+                <div class="item-title" style="margin-bottom: 4px;">${title}</div>
+                <div class="input-block-wrapper">
+                    <input type="text" class="input-details input-full-width" 
+                           value="${value}" 
+                           placeholder="Digite observações aqui..."
+                           oninput="this.setAttribute('value', this.value); autoSave();">
+                </div>
             </div>
         </div>`;
 }
@@ -237,7 +265,7 @@ function rotateBadge(el) {
 
 function toggleRow(chk) {
     const item = chk.closest('.checklist-item');
-    chk.checked ? item.classList.add('completed') : item.classList.remove('completed');
+    if(item) chk.checked ? item.classList.add('completed') : item.classList.remove('completed');
 }
 
 function addNewObs() {
@@ -281,7 +309,7 @@ async function downloadBundledHTML() {
             } catch (err) { console.warn("CSS externo inacessível."); }
         }
 
-        // Lógica aprimorada para capturar o JS e embutir no arquivo final
+        // Lógica de embutir o JS no arquivo final
         const scriptTag = document.createElement('script');
         try {
             const jsResponse = await fetch('script.js');
