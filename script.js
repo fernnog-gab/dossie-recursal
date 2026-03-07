@@ -30,14 +30,46 @@ function injectGlobalStyles() {
     document.head.appendChild(style);
 }
 
-// --- 1. GERAÇÃO E DOWNLOAD ---
+// --- 1. NORMALIZAÇÃO E TRADUTOR FLEXÍVEL (RESILIÊNCIA A IA) ---
+/**
+ * Normaliza as chaves do JSON para lidar com variações geradas por IA.
+ * Implementa a Prioridade 3 do plano de evolução.
+ */
+function normalizeData(data) {
+    const mapping = {
+        // Mapeamento de Temas
+        'temas_vinculantes': ['temas', 'temas_vinculado', 'temas_juridicos', 'vinculantes'],
+        // Mapeamento de Tópicos
+        'topicos_do_recurso': ['topicos', 'lista_topicos', 'itens_recurso', 'trilha_julgamento'],
+        // Mapeamento de Admissibilidade
+        'admissibilidade': ['preliminares', 'admissao', 'dados_processuais']
+    };
+
+    const normalized = { ...data };
+
+    for (const [officialKey, aliases] of Object.entries(mapping)) {
+        if (!normalized[officialKey]) {
+            const foundAlias = aliases.find(alias => data[alias]);
+            if (foundAlias) {
+                normalized[officialKey] = data[foundAlias];
+            }
+        }
+    }
+    return normalized;
+}
+
+// --- 2. GERAÇÃO E LIMPEZA ---
 async function generatePanel() {
     try {
-        const input = document.getElementById('json-input').value;
-        const data = JSON.parse(input);
+        const inputElement = document.getElementById('json-input');
+        const input = inputElement.value;
+        let data = JSON.parse(input);
+
+        // Aplica o Tradutor Flexível antes de renderizar
+        data = normalizeData(data);
 
         document.getElementById('process-id').innerText = data.processo || 'S/N';
-        document.getElementById('parties-display').innerText = `Partes: ${data.recorrente} x ${data.recorrido}`;
+        document.getElementById('parties-display').innerText = `Partes: ${data.recorrente || ''} x ${data.recorrido || ''}`;
 
         renderContent(data);
         await downloadBundledHTML();
@@ -59,45 +91,67 @@ async function generatePanel() {
     }
 }
 
+/**
+ * Limpa o campo de entrada com confirmação de segurança.
+ * Implementa as Prioridades 1 e 2 do plano.
+ */
+function limparJSON() {
+    const input = document.getElementById('json-input');
+    if (input.value.trim() !== "") {
+        if (confirm('Deseja realmente limpar todo o texto da caixa de entrada?')) {
+            input.value = '';
+            input.focus();
+        }
+    }
+}
+
 function renderContent(data) {
     const themePanel = document.getElementById('theme-panel');
     themePanel.innerHTML = '';
-    if (data.temas_vinculantes && data.temas_vinculantes.length > 0) {
+    
+    if (data.temas_vinculantes && Array.isArray(data.temas_vinculantes)) {
         data.temas_vinculantes.forEach(tema => {
             themePanel.innerHTML += `
                 <div class="theme-card-top">
-                    <div class="theme-info"><strong>${SVG_BALANCE} ${tema.numero}:</strong> ${tema.descricao}</div>
-                    <div style="font-size:0.7rem; background: #fff; padding:2px 6px; border-radius:4px;">${tema.impacto}</div>
+                    <div class="theme-info"><strong>${SVG_BALANCE} ${tema.numero || ''}:</strong> ${tema.descricao || ''}</div>
+                    <div style="font-size:0.7rem; background: #fff; padding:2px 6px; border-radius:4px;">${tema.impacto || ''}</div>
                 </div>`;
         });
     }
 
     const admGenContainer = document.getElementById('adm-general');
     admGenContainer.innerHTML = '';
+    
+    const admData = data.admissibilidade || {};
     const admItems = [
-        { t: 'Tempestividade', v: data.admissibilidade?.tempestividade },
-        { t: 'Preparo Recursal', v: data.admissibilidade?.preparo }
+        { t: 'Tempestividade', v: admData.tempestividade },
+        { t: 'Preparo Recursal', v: admData.preparo }
     ];
+    
     admItems.forEach(item => {
         admGenContainer.innerHTML += createRowHTML(item.t, item.v);
     });
 
-    // CORREÇÃO 1: Mapeamento da Representação Processual
-    const repData = data.admissibilidade?.representacao || {};
-    setupRepField('autor', repData.autor_da_acao); // Busca o exato "autor_da_acao" do JSON
-    setupRepField('reu', repData.reu_da_acao);     // Busca o exato "reu_da_acao" do JSON
+    const repData = admData.representacao || {};
+    setupRepField('autor', repData.autor_da_acao);
+    setupRepField('reu', repData.reu_da_acao);
 
     const topicContainer = document.getElementById('sortable-list');
     topicContainer.innerHTML = '';
     
-    // CORREÇÃO 2: Mapeamento da Trilha de Julgamento (Tópicos)
-    if(data.topicos_do_recurso) { 
+    if(data.topicos_do_recurso && Array.isArray(data.topicos_do_recurso)) { 
         data.topicos_do_recurso.forEach(topic => {
-            let partyClass = 'badge-author'; let partyText = 'AUTOR';
+            let partyClass = 'badge-author'; 
+            let partyText = 'AUTOR';
             
-            // CORREÇÃO 3: Mapeamento de quem recorre
-            if(topic.quem_recorre === 'RÉU DA AÇÃO') { partyClass = 'badge-defendant'; partyText = 'RÉU'; }
-            if(topic.quem_recorre === 'AMBOS') { partyClass = 'badge-joint'; partyText = 'AMBOS'; }
+            const recorrente = (topic.quem_recorre || '').toUpperCase();
+            if(recorrente === 'RÉU DA AÇÃO' || recorrente === 'RÉU') { 
+                partyClass = 'badge-defendant'; 
+                partyText = 'RÉU'; 
+            } else if(recorrente === 'AMBOS') { 
+                partyClass = 'badge-joint'; 
+                partyText = 'AMBOS'; 
+            }
 
             let themeBadgeHTML = topic.tema_numero ? `<span class="badge-theme-tag">${topic.tema_numero}</span>` : '';
 
@@ -105,7 +159,7 @@ function renderContent(data) {
                 <div class="checklist-item" draggable="true">
                     <input type="checkbox" class="chk-input" onchange="toggleRow(this); autoSave();">
                     <div class="item-content">
-                        <span class="item-title" title="${topic.resumo}">${topic.titulo}</span>
+                        <span class="item-title" title="${topic.resumo || ''}">${topic.titulo || ''}</span>
                     </div>
                     ${themeBadgeHTML}
                     <span class="badge ${partyClass}" 
@@ -118,7 +172,7 @@ function renderContent(data) {
     setupDrag();
 }
 
-// --- 2. PERSISTÊNCIA (AUTO-SAVE) ---
+// --- 3. PERSISTÊNCIA (AUTO-SAVE) ---
 document.addEventListener('DOMContentLoaded', () => {
     injectGlobalStyles(); 
     
@@ -208,7 +262,7 @@ function setupAutoSaveListeners() {
     });
 }
 
-// --- 3. HELPERS DE INTERAÇÃO ---
+// --- 4. HELPERS DE INTERAÇÃO ---
 function setupRepField(type, dataObj) {
     if(!dataObj) return;
     const chk = document.getElementById(`chk-rep-${type}`);
@@ -285,7 +339,11 @@ function addNewObs() {
     autoSave();
 }
 
-// --- 4. EXPORTAÇÃO COMPLETA ---
+// --- 5. EXPORTAÇÃO COMPLETA ---
+/**
+ * Empacota o HTML e gera o download com nomenclatura padronizada.
+ * Implementa a nomenclatura AAAAMMDD_dossie_[NUMERO]_HHMM.
+ */
 async function downloadBundledHTML() {
     document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked ? c.setAttribute('checked', 'checked') : c.removeAttribute('checked'));
     document.querySelectorAll('input[type="text"]').forEach(i => i.setAttribute('value', i.value));
@@ -315,6 +373,7 @@ async function downloadBundledHTML() {
             scriptTag.textContent = await jsResponse.text();
         } catch (err) {
             console.warn("Falha ao buscar script.js. Usando fallback inline.");
+            // Busca o conteúdo deste próprio script se o fetch falhar
             scriptTag.textContent = document.scripts[document.scripts.length - 1].textContent;
         }
 
@@ -325,8 +384,21 @@ async function downloadBundledHTML() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        const proc = document.getElementById('process-id').innerText.replace(/[^0-9]/g, '').slice(0,15) || 'Dossie';
-        a.download = `Dossie_${proc}.html`;
+
+        // Lógica de nomenclatura dinâmica [Prioridade 1]
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const hh = String(now.getHours()).padStart(2, '0');
+        const min = String(now.getMinutes()).padStart(2, '0');
+
+        const rawProc = document.getElementById('process-id').innerText;
+        const procNum = rawProc.replace(/[^0-9]/g, '');
+        const processoSeguro = procNum ? procNum : 'sem_processo';
+
+        a.download = `${yyyy}${mm}${dd}_dossie_${processoSeguro}_${hh}${min}.html`;
+        
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -338,7 +410,7 @@ async function downloadBundledHTML() {
     }
 }
 
-// --- 5. DRAG & DROP ---
+// --- 6. DRAG & DROP ---
 function setupDrag() {
     const list = document.getElementById("sortable-list");
     if (!list) return;
