@@ -26,30 +26,22 @@ function injectGlobalStyles() {
             transition: opacity 0.2s ease; 
         }
         .badge:hover { opacity: 0.8; }
-
-        /* Estilos de Temas (Prioridade 1 e 2) */
-        .theme-card-top {
-            cursor: pointer;
-            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease;
-        }
-        .theme-card-top.tema-ignorado {
-            background-color: #222222 !important;
-            color: #cccccc !important;
-            border-color: #444444 !important;
-            opacity: 0.6;
-            text-decoration: line-through;
-        }
-        .theme-card-top.tema-ignorado .theme-info strong { color: #888 !important; }
-        .theme-card-top.tema-ignorado div[style*="background: #fff"] { background: #333 !important; color: #aaa !important; }
     `;
     document.head.appendChild(style);
 }
 
 // --- 1. NORMALIZAÇÃO E TRADUTOR FLEXÍVEL (RESILIÊNCIA A IA) ---
+/**
+ * Normaliza as chaves do JSON para lidar com variações geradas por IA.
+ * Implementa a Prioridade 3 do plano de evolução.
+ */
 function normalizeData(data) {
     const mapping = {
+        // Mapeamento de Temas
         'temas_vinculantes': ['temas', 'temas_vinculado', 'temas_juridicos', 'vinculantes'],
+        // Mapeamento de Tópicos
         'topicos_do_recurso': ['topicos', 'lista_topicos', 'itens_recurso', 'trilha_julgamento'],
+        // Mapeamento de Admissibilidade
         'admissibilidade': ['preliminares', 'admissao', 'dados_processuais']
     };
 
@@ -66,14 +58,6 @@ function normalizeData(data) {
     return normalized;
 }
 
-/**
- * Separa múltiplos temas por barra, vírgula ou traço (Prioridade 1).
- */
-function processarTemas(inputString) {
-    if (!inputString) return [];
-    return inputString.split(/\s*[/,\-]\s*/).filter(t => t.trim() !== '');
-}
-
 // --- 2. GERAÇÃO E LIMPEZA ---
 async function generatePanel() {
     try {
@@ -81,6 +65,7 @@ async function generatePanel() {
         const input = inputElement.value;
         let data = JSON.parse(input);
 
+        // Aplica o Tradutor Flexível antes de renderizar
         data = normalizeData(data);
 
         document.getElementById('process-id').innerText = data.processo || 'S/N';
@@ -106,6 +91,10 @@ async function generatePanel() {
     }
 }
 
+/**
+ * Limpa o campo de entrada com confirmação de segurança.
+ * Implementa as Prioridades 1 e 2 do plano.
+ */
 function limparJSON() {
     const input = document.getElementById('json-input');
     if (input.value.trim() !== "") {
@@ -121,17 +110,12 @@ function renderContent(data) {
     themePanel.innerHTML = '';
     
     if (data.temas_vinculantes && Array.isArray(data.temas_vinculantes)) {
-        data.temas_vinculantes.forEach(temaEntry => {
-            // Suporte a múltiplos temas dentro de uma mesma descrição (Prioridade 1)
-            const descricoes = processarTemas(temaEntry.descricao);
-            
-            descricoes.forEach(desc => {
-                themePanel.innerHTML += `
-                    <div class="theme-card-top">
-                        <div class="theme-info"><strong>${SVG_BALANCE} ${temaEntry.numero || ''}:</strong> ${desc}</div>
-                        <div style="font-size:0.7rem; background: #fff; padding:2px 6px; border-radius:4px;">${temaEntry.impacto || ''}</div>
-                    </div>`;
-            });
+        data.temas_vinculantes.forEach(tema => {
+            themePanel.innerHTML += `
+                <div class="theme-card-top">
+                    <div class="theme-info"><strong>${SVG_BALANCE} ${tema.numero || ''}:</strong> ${tema.descricao || ''}</div>
+                    <div style="font-size:0.7rem; background: #fff; padding:2px 6px; border-radius:4px;">${tema.impacto || ''}</div>
+                </div>`;
         });
     }
 
@@ -198,15 +182,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setupAutoSaveListeners();
         setupDrag(); 
     }
-
-    // Delegação de evento para clique nos temas (Prioridade 1 e 3)
-    document.addEventListener('click', (e) => {
-        const themeCard = e.target.closest('.theme-card-top');
-        if (themeCard) {
-            themeCard.classList.toggle('tema-ignorado');
-            autoSave();
-        }
-    });
 });
 
 function getStorageKey() {
@@ -218,7 +193,6 @@ function autoSave() {
     const key = getStorageKey();
     const sortableList = document.getElementById('sortable-list');
     const obsList = document.getElementById('obs-list');
-    const themePanel = document.getElementById('theme-panel');
     
     const state = {
         checks: Array.from(document.querySelectorAll('.chk-input')).map(el => el.checked),
@@ -228,8 +202,7 @@ function autoSave() {
             text: el.innerText 
         })),
         sortableHTML: sortableList ? sortableList.innerHTML : null,
-        obsHTML: obsList ? obsList.innerHTML : null,
-        themeHTML: themePanel ? themePanel.innerHTML : null // Prioridade 3
+        obsHTML: obsList ? obsList.innerHTML : null 
     };
     localStorage.setItem(key, JSON.stringify(state));
 }
@@ -242,11 +215,6 @@ function loadState() {
     try {
         const state = JSON.parse(saved);
         
-        const themePanel = document.getElementById('theme-panel');
-        if (themePanel && state.themeHTML) {
-            themePanel.innerHTML = state.themeHTML;
-        }
-
         const sortableList = document.getElementById('sortable-list');
         if (sortableList && state.sortableHTML) {
             sortableList.innerHTML = state.sortableHTML;
@@ -372,6 +340,10 @@ function addNewObs() {
 }
 
 // --- 5. EXPORTAÇÃO COMPLETA ---
+/**
+ * Empacota o HTML e gera o download com nomenclatura padronizada.
+ * Implementa a nomenclatura AAAAMMDD_dossie_[NUMERO]_HHMM.
+ */
 async function downloadBundledHTML() {
     document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked ? c.setAttribute('checked', 'checked') : c.removeAttribute('checked'));
     document.querySelectorAll('input[type="text"]').forEach(i => i.setAttribute('value', i.value));
@@ -396,7 +368,14 @@ async function downloadBundledHTML() {
         }
 
         const scriptTag = document.createElement('script');
-        scriptTag.textContent = document.scripts[document.scripts.length - 1].textContent;
+        try {
+            const jsResponse = await fetch('script.js');
+            scriptTag.textContent = await jsResponse.text();
+        } catch (err) {
+            console.warn("Falha ao buscar script.js. Usando fallback inline.");
+            // Busca o conteúdo deste próprio script se o fetch falhar
+            scriptTag.textContent = document.scripts[document.scripts.length - 1].textContent;
+        }
 
         const cloneScript = clone.querySelector('script[src*="script.js"]');
         if(cloneScript) cloneScript.replaceWith(scriptTag);
@@ -406,6 +385,7 @@ async function downloadBundledHTML() {
         const a = document.createElement('a');
         a.href = url;
 
+        // Lógica de nomenclatura dinâmica [Prioridade 1]
         const now = new Date();
         const yyyy = now.getFullYear();
         const mm = String(now.getMonth() + 1).padStart(2, '0');
