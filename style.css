@@ -14,8 +14,8 @@ body {
   color: var(--text-main); 
   margin: 0; 
   padding: 20px; 
-  display: block; 
-  overflow-y: auto; 
+  display: block; /* Permite o fluxo normal do documento e rolagem */
+  overflow-y: auto; /* Força a disponibilidade da barra de rolagem vertical */
 }
 
 /* Container atualizado para não cortar conteúdo */
@@ -25,7 +25,7 @@ body {
   background: var(--bg-card); 
   border-radius: 12px; 
   box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
-  overflow: visible; 
+  overflow: visible; /* Impede que o container corte o conteúdo interno */
   margin: 0 auto;
   padding-bottom: 50px; 
   display: none; 
@@ -46,7 +46,7 @@ body {
 
 textarea { width: 100%; height: 200px; padding: 15px; border: 2px solid #cbd5e1; border-radius: 8px; font-family: monospace; font-size: 0.9rem; margin-bottom: 20px; resize: vertical; box-sizing: border-box; }
 
-/* Botões Principais */
+/* Botão de Geração - Atualizado para Flexbox */
 .btn-generate { 
   background: var(--success-green); 
   color: white; 
@@ -61,6 +61,7 @@ textarea { width: 100%; height: 200px; padding: 15px; border: 2px solid #cbd5e1;
   justify-content: center; 
 }
 
+/* Botão Limpar - Estilização conforme Plano de Evolução */
 .btn-clear { 
   background: #f1f5f9; 
   color: #64748b; 
@@ -78,7 +79,7 @@ textarea { width: 100%; height: 200px; padding: 15px; border: 2px solid #cbd5e1;
 
 .btn-clear:hover {
   background: #e2e8f0;
-  color: #ef4444; 
+  color: #ef4444; /* Indica visualmente ação de exclusão */
   border-color: #ef4444;
 }
 
@@ -100,7 +101,7 @@ header { background-color: var(--primary-navy); color: white; padding: 25px 40px
 .rep-label { display: flex; align-items: center; font-weight: 600; font-size: 0.85rem; margin-right: 10px; white-space: nowrap; cursor: pointer; }
 .input-details { border: none; background: transparent; color: var(--text-sub); font-family: inherit; font-size: 0.85rem; flex: 1; outline: none; }
 
-/* Badges e Tags de Tema */
+/* Transformando a tag visualmente em um botão clicável */
 .badge { 
   font-size: 0.65rem; 
   font-weight: 700; 
@@ -114,34 +115,23 @@ header { background-color: var(--primary-navy); color: white; padding: 25px 40px
   transition: opacity 0.2s ease; 
 }
 
-.badge:hover { opacity: 0.8; }
+.badge:hover {
+  opacity: 0.8; 
+}
+
+/* Badges (Partes) */
 .badge-author { background: var(--author-bg); color: var(--author-color); border-color: var(--author-border); }
 .badge-defendant { background: var(--defendant-bg); color: var(--defendant-color); border-color: var(--defendant-border); }
 .badge-joint { background: var(--joint-bg); color: var(--joint-color); border-color: var(--joint-border); }
 
-/* ESTILIZAÇÃO DE TEMAS (DINÂMICOS) */
-.badge-theme-tag, .card-tema { 
+/* BADGE DE TEMA */
+.badge-theme-tag { 
     background: #fff; 
     color: var(--theme-orange); 
     border: 1px solid var(--theme-orange); 
     font-size: 0.65rem; font-weight: 700; padding: 3px 8px; border-radius: 4px; 
     margin-left: auto; 
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.card-tema {
-    margin-left: 8px;
-    display: inline-block;
-}
-
-/* Estado "Ignorado/Irrelevante" - Feedback Visual Prioridade 1 e 2 */
-.card-tema.tema-ignorado {
-  background-color: #222222 !important; /* Fundo escuro */
-  color: #cccccc !important; /* Texto cinza clarinho */
-  border-color: #444444 !important;
-  opacity: 0.8;
-  text-decoration: line-through; /* Efeito de riscado */
+    cursor: help;
 }
 
 /* Painel de Vinculação (Topo) */
@@ -157,21 +147,30 @@ header { background-color: var(--primary-navy); color: white; padding: 25px 40px
 }
 
 .theme-info { font-size: 0.85rem; color: #9a3412; }
+
+/* Novo ícone de tema */
 .icon-theme { vertical-align: middle; margin-right: 6px; color: #9a3412; }
 
-/* Botões de Ação e Drag & Drop */
+/* Botões */
 .btn-save-file { background: var(--success-green); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; }
 .btn-save-file svg { margin-right: 6px; }
 
 .btn-add-row { display: block; width: calc(100% - 80px); margin: 15px 40px; padding: 10px; background: #fff; border: 1px dashed #cbd5e1; border-radius: 8px; color: #64748b; font-weight: 600; cursor: pointer; text-align: center; font-size: 0.8rem;}
 
+/* Drag & Drop */
 .checklist-item[draggable="true"] { cursor: grab; }
 .checklist-item.dragging { opacity: 0.5; background: #f1f5f9; }
 .checklist-item.completed { background-color: #f0fdf4; }
 .checklist-item.completed .item-title { color: #059669; }
 
-/* Refinamentos de Input */
-.input-block-wrapper { display: block; width: 100%; margin-top: 8px; }
+/* --- REFINAMENTOS DE INPUT --- */
+
+.input-block-wrapper {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+}
+
 .input-full-width {
     width: 100%;
     box-sizing: border-box; 
@@ -185,4 +184,7 @@ header { background-color: var(--primary-navy); color: white; padding: 25px 40px
     outline: none;
     transition: border-color 0.2s;
 }
-.input-full-width:focus { border-color: var(--author-border); }
+
+.input-full-width:focus {
+    border-color: var(--author-border);
+}
