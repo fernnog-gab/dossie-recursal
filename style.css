@@ -45,7 +45,21 @@ body {
 }
 
 textarea { width: 100%; height: 200px; padding: 15px; border: 2px solid #cbd5e1; border-radius: 8px; font-family: monospace; font-size: 0.9rem; margin-bottom: 20px; resize: vertical; box-sizing: border-box; }
-.btn-generate { background: var(--success-green); color: white; padding: 12px 30px; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; font-weight: bold; }
+
+/* Botão de Geração - Atualizado para Flexbox */
+.btn-generate { 
+  background: var(--success-green); 
+  color: white; 
+  padding: 12px 30px; 
+  border: none; 
+  border-radius: 6px; 
+  font-size: 1rem; 
+  cursor: pointer; 
+  font-weight: bold; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+}
 
 /* Header */
 header { background-color: var(--primary-navy); color: white; padding: 25px 40px; border-bottom: 4px solid var(--theme-orange); display:flex; justify-content:space-between; align-items:center; }
@@ -73,14 +87,14 @@ header { background-color: var(--primary-navy); color: white; padding: 25px 40px
   border-radius: 4px; 
   text-transform: uppercase; 
   border: 1px solid transparent; 
-  cursor: pointer; /* Feedback de interatividade (Mãozinha) */
-  user-select: none; /* Evita seleção acidental do texto */
+  cursor: pointer; 
+  user-select: none; 
   margin-left: 8px; 
-  transition: opacity 0.2s ease; /* Suavidade na troca */
+  transition: opacity 0.2s ease; 
 }
 
 .badge:hover {
-  opacity: 0.8; /* Leve indicação de foco ao passar o mouse */
+  opacity: 0.8; 
 }
 
 /* Badges (Partes) */
@@ -88,13 +102,13 @@ header { background-color: var(--primary-navy); color: white; padding: 25px 40px
 .badge-defendant { background: var(--defendant-bg); color: var(--defendant-color); border-color: var(--defendant-border); }
 .badge-joint { background: var(--joint-bg); color: var(--joint-color); border-color: var(--joint-border); }
 
-/* BADGE DE TEMA (NOVO) */
+/* BADGE DE TEMA */
 .badge-theme-tag { 
     background: #fff; 
     color: var(--theme-orange); 
     border: 1px solid var(--theme-orange); 
     font-size: 0.65rem; font-weight: 700; padding: 3px 8px; border-radius: 4px; 
-    margin-left: auto; /* Empurra para a direita */
+    margin-left: auto; 
     cursor: help;
 }
 
@@ -102,12 +116,12 @@ header { background-color: var(--primary-navy); color: white; padding: 25px 40px
 .theme-card-top { background: var(--theme-bg-orange); border-left: 4px solid var(--theme-orange); padding: 12px 20px; margin: 10px 40px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;}
 .theme-info { font-size: 0.85rem; color: #9a3412; }
 
-/* Novo ícone de tema (Injetado via JS) */
+/* Novo ícone de tema */
 .icon-theme { vertical-align: middle; margin-right: 6px; color: #9a3412; }
 
-/* Botoes */
+/* Botões */
 .btn-save-file { background: var(--success-green); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; }
-.btn-save-file svg { margin-right: 6px; } /* Ajuste fino para SVG */
+.btn-save-file svg { margin-right: 6px; }
 
 .btn-add-row { display: block; width: calc(100% - 80px); margin: 15px 40px; padding: 10px; background: #fff; border: 1px dashed #cbd5e1; border-radius: 8px; color: #64748b; font-weight: 600; cursor: pointer; text-align: center; font-size: 0.8rem;}
 
@@ -116,3 +130,29 @@ header { background-color: var(--primary-navy); color: white; padding: 25px 40px
 .checklist-item.dragging { opacity: 0.5; background: #f1f5f9; }
 .checklist-item.completed { background-color: #f0fdf4; }
 .checklist-item.completed .item-title { color: #059669; }
+
+/* --- REFINAMENTOS DE INPUT (PLANO DE EVOLUÇÃO) --- */
+
+.input-block-wrapper {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+}
+
+.input-full-width {
+    width: 100%;
+    box-sizing: border-box; /* Garante que o padding não estoure a largura */
+    padding: 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    background-color: #f8fafc;
+    margin-top: 4px;
+    font-size: 0.85rem;
+    color: var(--text-sub);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.input-full-width:focus {
+    border-color: var(--author-border);
+}
