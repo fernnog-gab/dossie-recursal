@@ -1,12 +1,6 @@
 // --- CONSTANTES E ÍCONES ---
 const SVG_BALANCE = `<svg class="icon-theme" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 6px; color: #9a3412;"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>`;
 
-/**
- * Separadores utilizados para fatiar múltiplos temas listados pela IA.
- * Implementa a Melhoria de Arquitetura (Prioridade 2).
- */
-const AI_SEPARATORS = /[\/\\,]| \- /;
-
 const badgeTypes = [ 
     {c:'badge-author', t:'AUTOR'}, 
     {c:'badge-defendant', t:'RÉU'}, 
@@ -32,38 +26,22 @@ function injectGlobalStyles() {
             transition: opacity 0.2s ease; 
         }
         .badge:hover { opacity: 0.8; }
-
-        /* Estilos para Tags de Temas e Desativação Visual */
-        .badge-theme-tag { 
-            background: #fff; 
-            color: #9a3412; 
-            border: 1px solid #9a3412; 
-            font-size: 0.65rem; 
-            font-weight: 700; 
-            padding: 3px 8px; 
-            border-radius: 4px; 
-            margin-left: auto; 
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .badge-theme-tag:hover {
-            opacity: 0.8;
-        }
-        .badge-theme-tag.inactive-theme {
-            background: #f1f5f9;
-            color: #94a3b8;
-            border-color: #cbd5e1;
-            text-decoration: line-through;
-        }
     `;
     document.head.appendChild(style);
 }
 
 // --- 1. NORMALIZAÇÃO E TRADUTOR FLEXÍVEL (RESILIÊNCIA A IA) ---
+/**
+ * Normaliza as chaves do JSON para lidar com variações geradas por IA.
+ * Implementa a Prioridade 3 do plano de evolução.
+ */
 function normalizeData(data) {
     const mapping = {
+        // Mapeamento de Temas
         'temas_vinculantes': ['temas', 'temas_vinculado', 'temas_juridicos', 'vinculantes'],
+        // Mapeamento de Tópicos
         'topicos_do_recurso': ['topicos', 'lista_topicos', 'itens_recurso', 'trilha_julgamento'],
+        // Mapeamento de Admissibilidade
         'admissibilidade': ['preliminares', 'admissao', 'dados_processuais']
     };
 
@@ -87,6 +65,7 @@ async function generatePanel() {
         const input = inputElement.value;
         let data = JSON.parse(input);
 
+        // Aplica o Tradutor Flexível antes de renderizar
         data = normalizeData(data);
 
         document.getElementById('process-id').innerText = data.processo || 'S/N';
@@ -112,6 +91,10 @@ async function generatePanel() {
     }
 }
 
+/**
+ * Limpa o campo de entrada com confirmação de segurança.
+ * Implementa as Prioridades 1 e 2 do plano.
+ */
 function limparJSON() {
     const input = document.getElementById('json-input');
     if (input.value.trim() !== "") {
@@ -170,23 +153,7 @@ function renderContent(data) {
                 partyText = 'AMBOS'; 
             }
 
-            /**
-             * Lógica de Desmembramento Dinâmico.
-             * Cria um card individual para cada tema detectado na string.
-             */
-            let themeBadgeHTML = '';
-            if (topic.tema_numero) {
-                const temasSeparados = topic.tema_numero.split(AI_SEPARATORS);
-                temasSeparados.forEach(tema => {
-                    const temaLimpo = tema.trim();
-                    if (temaLimpo) {
-                        themeBadgeHTML += `
-                            <span class="badge-theme-tag" 
-                                  onclick="toggleThemeState(this)" 
-                                  title="Clique para desativar/ativar este tema">${temaLimpo}</span>`;
-                    }
-                });
-            }
+            let themeBadgeHTML = topic.tema_numero ? `<span class="badge-theme-tag">${topic.tema_numero}</span>` : '';
 
             topicContainer.innerHTML += `
                 <div class="checklist-item" draggable="true">
@@ -296,16 +263,6 @@ function setupAutoSaveListeners() {
 }
 
 // --- 4. HELPERS DE INTERAÇÃO ---
-
-/**
- * Alterna o estado visual da tag de tema (ativo/inativo).
- * Implementa a funcionalidade de Desativação Visual.
- */
-function toggleThemeState(element) {
-    element.classList.toggle('inactive-theme');
-    autoSave();
-}
-
 function setupRepField(type, dataObj) {
     if(!dataObj) return;
     const chk = document.getElementById(`chk-rep-${type}`);
@@ -383,6 +340,10 @@ function addNewObs() {
 }
 
 // --- 5. EXPORTAÇÃO COMPLETA ---
+/**
+ * Empacota o HTML e gera o download com nomenclatura padronizada.
+ * Implementa a nomenclatura AAAAMMDD_dossie_[NUMERO]_HHMM.
+ */
 async function downloadBundledHTML() {
     document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked ? c.setAttribute('checked', 'checked') : c.removeAttribute('checked'));
     document.querySelectorAll('input[type="text"]').forEach(i => i.setAttribute('value', i.value));
@@ -407,7 +368,14 @@ async function downloadBundledHTML() {
         }
 
         const scriptTag = document.createElement('script');
-        scriptTag.textContent = document.querySelector('script').textContent;
+        try {
+            const jsResponse = await fetch('script.js');
+            scriptTag.textContent = await jsResponse.text();
+        } catch (err) {
+            console.warn("Falha ao buscar script.js. Usando fallback inline.");
+            // Busca o conteúdo deste próprio script se o fetch falhar
+            scriptTag.textContent = document.scripts[document.scripts.length - 1].textContent;
+        }
 
         const cloneScript = clone.querySelector('script[src*="script.js"]');
         if(cloneScript) cloneScript.replaceWith(scriptTag);
@@ -417,6 +385,7 @@ async function downloadBundledHTML() {
         const a = document.createElement('a');
         a.href = url;
 
+        // Lógica de nomenclatura dinâmica [Prioridade 1]
         const now = new Date();
         const yyyy = now.getFullYear();
         const mm = String(now.getMonth() + 1).padStart(2, '0');

@@ -124,30 +124,14 @@ header { background-color: var(--primary-navy); color: white; padding: 25px 40px
 .badge-defendant { background: var(--defendant-bg); color: var(--defendant-color); border-color: var(--defendant-border); }
 .badge-joint { background: var(--joint-bg); color: var(--joint-color); border-color: var(--joint-border); }
 
-/* BADGE DE TEMA - Atualizada para interatividade */
+/* BADGE DE TEMA */
 .badge-theme-tag { 
     background: #fff; 
     color: var(--theme-orange); 
     border: 1px solid var(--theme-orange); 
-    font-size: 0.65rem; 
-    font-weight: 700; 
-    padding: 3px 8px; 
-    border-radius: 4px; 
+    font-size: 0.65rem; font-weight: 700; padding: 3px 8px; border-radius: 4px; 
     margin-left: auto; 
-    cursor: pointer; /* Alterado de help para pointer */
-    transition: all 0.2s ease;
-}
-
-.badge-theme-tag:hover {
-    opacity: 0.8;
-}
-
-/* Estado visual inativo para temas desativados */
-.badge-theme-tag.inactive-theme {
-    background: #f1f5f9;
-    color: #94a3b8;
-    border-color: #cbd5e1;
-    text-decoration: line-through;
+    cursor: help;
 }
 
 /* Painel de Vinculação (Topo) */
