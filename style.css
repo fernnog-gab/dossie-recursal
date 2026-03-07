@@ -113,7 +113,17 @@ header { background-color: var(--primary-navy); color: white; padding: 25px 40px
 }
 
 /* Painel de Vinculação (Topo) */
-.theme-card-top { background: var(--theme-bg-orange); border-left: 4px solid var(--theme-orange); padding: 12px 20px; margin: 10px 40px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;}
+.theme-card-top { 
+    background: var(--theme-bg-orange); 
+    border-left: 4px solid var(--theme-orange); 
+    padding: 12px 20px; 
+    margin: 0 40px 10px 40px; /* Ajustado conforme Plano de Evolução: margem superior removida */
+    border-radius: 4px; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+}
+
 .theme-info { font-size: 0.85rem; color: #9a3412; }
 
 /* Novo ícone de tema */
