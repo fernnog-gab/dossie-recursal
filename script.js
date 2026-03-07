@@ -26,69 +26,46 @@ function injectGlobalStyles() {
             transition: opacity 0.2s ease; 
         }
         .badge:hover { opacity: 0.8; }
-
-        /* --- TOGGLE DE INATIVIDADE DO CARD DE TEMA --- */
-        .theme-card-top {
-            cursor: pointer;
-            transition: background 0.3s ease, border-color 0.3s ease, opacity 0.3s ease;
-            position: relative;
-        }
-        .theme-card-top.inactive {
-            background: #e2e8f0 !important;
-            border-left-color: #94a3b8 !important;
-            opacity: 0.55;
-        }
-        .theme-card-top.inactive .theme-info {
-            color: #64748b;
-            text-decoration: line-through;
-        }
-        .theme-card-top.inactive .badge-theme-tag {
-            background: #f1f5f9;
-            color: #94a3b8;
-            border-color: #94a3b8;
-        }
-        .theme-card-top::after {
-            content: 'clique para ativar/desativar';
-            position: absolute;
-            right: 12px;
-            bottom: -18px;
-            font-size: 0.65rem;
-            color: #94a3b8;
-            font-style: italic;
-            opacity: 0;
-            transition: opacity 0.2s;
-            pointer-events: none;
-        }
-        .theme-card-top:hover::after { opacity: 1; }
     `;
     document.head.appendChild(style);
 }
 
-// --- 1. NORMALIZAÇÃO E TRADUTOR FLEXÍVEL ---
+// --- 1. NORMALIZAÇÃO E TRADUTOR FLEXÍVEL (RESILIÊNCIA A IA) ---
+/**
+ * Normaliza as chaves do JSON para lidar com variações geradas por IA.
+ * Implementa a Prioridade 3 do plano de evolução.
+ */
 function normalizeData(data) {
     const mapping = {
+        // Mapeamento de Temas
         'temas_vinculantes': ['temas', 'temas_vinculado', 'temas_juridicos', 'vinculantes'],
+        // Mapeamento de Tópicos
         'topicos_do_recurso': ['topicos', 'lista_topicos', 'itens_recurso', 'trilha_julgamento'],
+        // Mapeamento de Admissibilidade
         'admissibilidade': ['preliminares', 'admissao', 'dados_processuais']
     };
 
     const normalized = { ...data };
+
     for (const [officialKey, aliases] of Object.entries(mapping)) {
         if (!normalized[officialKey]) {
             const foundAlias = aliases.find(alias => data[alias]);
-            if (foundAlias) normalized[officialKey] = data[foundAlias];
+            if (foundAlias) {
+                normalized[officialKey] = data[foundAlias];
+            }
         }
     }
     return normalized;
 }
 
-// --- 2. GERAÇÃO E RENDERIZAÇÃO ---
+// --- 2. GERAÇÃO E LIMPEZA ---
 async function generatePanel() {
     try {
         const inputElement = document.getElementById('json-input');
         const input = inputElement.value;
         let data = JSON.parse(input);
 
+        // Aplica o Tradutor Flexível antes de renderizar
         data = normalizeData(data);
 
         document.getElementById('process-id').innerText = data.processo || 'S/N';
@@ -107,9 +84,24 @@ async function generatePanel() {
                 btn.style.backgroundColor = "";
             }, 3000);
         }
+
     } catch (e) {
         console.error(e);
         alert("Erro no JSON: " + e.message);
+    }
+}
+
+/**
+ * Limpa o campo de entrada com confirmação de segurança.
+ * Implementa as Prioridades 1 e 2 do plano.
+ */
+function limparJSON() {
+    const input = document.getElementById('json-input');
+    if (input.value.trim() !== "") {
+        if (confirm('Deseja realmente limpar todo o texto da caixa de entrada?')) {
+            input.value = '';
+            input.focus();
+        }
     }
 }
 
@@ -118,10 +110,9 @@ function renderContent(data) {
     themePanel.innerHTML = '';
     
     if (data.temas_vinculantes && Array.isArray(data.temas_vinculantes)) {
-        data.temas_vinculantes.forEach((tema, index) => {
-            const themeId = tema.numero ? `tema_${tema.numero}` : `tema_${index}`;
+        data.temas_vinculantes.forEach(tema => {
             themePanel.innerHTML += `
-                <div class="theme-card-top" data-theme-id="${themeId}">
+                <div class="theme-card-top">
                     <div class="theme-info"><strong>${SVG_BALANCE} ${tema.numero || ''}:</strong> ${tema.descricao || ''}</div>
                     <div style="font-size:0.7rem; background: #fff; padding:2px 6px; border-radius:4px;">${tema.impacto || ''}</div>
                 </div>`;
@@ -178,39 +169,13 @@ function renderContent(data) {
             `;
         });
     }
-    
-    attachThemeToggle(data.processo || 'sem_id');
     setupDrag();
 }
 
 // --- 3. PERSISTÊNCIA (AUTO-SAVE) ---
-function attachThemeToggle(processoId) {
-    const cards = document.querySelectorAll('.theme-card-top');
-    cards.forEach(card => {
-        const themeId = card.dataset.themeId;
-        const storageKey = `themeState_${processoId}_${themeId}`;
-
-        if (localStorage.getItem(storageKey) === 'inactive') {
-            card.classList.add('inactive');
-        }
-
-        // Clone para evitar múltiplos listeners em regerações
-        const newCard = card.cloneNode(true);
-        card.parentNode.replaceChild(newCard, card);
-        
-        newCard.addEventListener('click', function() {
-            this.classList.toggle('inactive');
-            if (this.classList.contains('inactive')) {
-                localStorage.setItem(storageKey, 'inactive');
-            } else {
-                localStorage.removeItem(storageKey);
-            }
-        });
-    });
-}
-
 document.addEventListener('DOMContentLoaded', () => {
     injectGlobalStyles(); 
+    
     const importer = document.getElementById('json-importer');
     if (!importer || importer.style.display === 'none') {
         loadState();
@@ -245,37 +210,36 @@ function autoSave() {
 function loadState() {
     const key = getStorageKey();
     const saved = localStorage.getItem(key);
-    
-    // Carregar estados de inatividade de temas
-    const procId = document.getElementById('process-id').innerText.trim() || 'sem_id';
-    document.querySelectorAll('.theme-card-top').forEach(card => {
-        const themeId = card.dataset.themeId;
-        if(localStorage.getItem(`themeState_${procId}_${themeId}`) === 'inactive') {
-            card.classList.add('inactive');
-        }
-    });
-
     if (!saved) return;
+
     try {
         const state = JSON.parse(saved);
+        
         const sortableList = document.getElementById('sortable-list');
         if (sortableList && state.sortableHTML) {
             sortableList.innerHTML = state.sortableHTML;
             setupDrag(); 
         }
+
         const obsList = document.getElementById('obs-list');
         if (obsList && state.obsHTML) {
             obsList.innerHTML = state.obsHTML;
         }
+
         const checks = document.querySelectorAll('.chk-input');
         state.checks.forEach((val, i) => { 
             if(checks[i]) { 
                 checks[i].checked = val; 
-                if(val) checks[i].closest('.checklist-item')?.classList.add('completed');
+                if(val) {
+                    const item = checks[i].closest('.checklist-item');
+                    if(item) item.classList.add('completed');
+                }
             } 
         });
+
         const inputs = document.querySelectorAll('input[type="text"]');
         state.inputs.forEach((val, i) => { if(inputs[i]) inputs[i].value = val; });
+
         const badges = document.querySelectorAll('.badge');
         state.badges.forEach((val, i) => { 
             if(badges[i]) { 
@@ -283,53 +247,48 @@ function loadState() {
                 badges[i].innerText = val.text; 
             } 
         });
+
         checkRepStatus(); 
-    } catch (e) { console.error("Erro ao carregar estado:", e); }
+    } catch (e) {
+        console.error("Erro ao carregar estado:", e);
+    }
 }
 
 function setupAutoSaveListeners() {
     document.addEventListener('input', (e) => {
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') autoSave();
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+            autoSave();
+        }
     });
 }
 
 // --- 4. HELPERS DE INTERAÇÃO ---
-function rotateBadge(el) {
-    const states = ['badge-author', 'badge-defendant', 'badge-joint'];
-    const texts = ['AUTOR', 'RÉU', 'AMBOS'];
-    let currentIdx = states.indexOf(el.classList.contains('badge-defendant') ? 'badge-defendant' : (el.classList.contains('badge-joint') ? 'badge-joint' : 'badge-author'));
-    const nextIdx = (currentIdx + 1) % 3;
-    el.classList.remove(...states);
-    el.classList.add(states[nextIdx]);
-    el.innerText = texts[nextIdx];
-    autoSave();
-}
-
-function toggleRow(chk) {
-    const item = chk.closest('.checklist-item');
-    if(item) chk.checked ? item.classList.add('completed') : item.classList.remove('completed');
-}
-
-function checkRepStatus() {
-    const chkAutor = document.getElementById('chk-rep-autor');
-    const chkReu = document.getElementById('chk-rep-reu');
-    const row = document.getElementById('rep-row-main');
-    if (chkAutor && chkReu && row) {
-        (chkAutor.checked && chkReu.checked) ? row.classList.add('completed') : row.classList.remove('completed');
-        autoSave();
-    }
-}
-
 function setupRepField(type, dataObj) {
     if(!dataObj) return;
     const chk = document.getElementById(`chk-rep-${type}`);
     const input = document.getElementById(`input-rep-${type}`);
+    
     if(chk && dataObj.status) chk.checked = true;
     if(input && dataObj.obs) {
         input.value = dataObj.obs;
         input.setAttribute('value', dataObj.obs);
     }
     checkRepStatus(); 
+}
+
+function checkRepStatus() {
+    const chkAutor = document.getElementById('chk-rep-autor');
+    const chkReu = document.getElementById('chk-rep-reu');
+    const row = document.getElementById('rep-row-main');
+
+    if (chkAutor && chkReu && row) {
+        if (chkAutor.checked && chkReu.checked) {
+            row.classList.add('completed');
+        } else {
+            row.classList.remove('completed');
+        }
+        autoSave();
+    }
 }
 
 function createRowHTML(title, value = '') {
@@ -348,6 +307,22 @@ function createRowHTML(title, value = '') {
         </div>`;
 }
 
+function rotateBadge(el) {
+    const states = ['badge-author', 'badge-defendant', 'badge-joint'];
+    const texts = ['AUTOR', 'RÉU', 'AMBOS'];
+    let currentIdx = states.indexOf(el.classList.contains('badge-defendant') ? 'badge-defendant' : (el.classList.contains('badge-joint') ? 'badge-joint' : 'badge-author'));
+    const nextIdx = (currentIdx + 1) % 3;
+    el.classList.remove(...states);
+    el.classList.add(states[nextIdx]);
+    el.innerText = texts[nextIdx];
+    autoSave();
+}
+
+function toggleRow(chk) {
+    const item = chk.closest('.checklist-item');
+    if(item) chk.checked ? item.classList.add('completed') : item.classList.remove('completed');
+}
+
 function addNewObs() {
     const container = document.getElementById('obs-list');
     const div = document.createElement('div');
@@ -357,21 +332,18 @@ function addNewObs() {
         <div style="flex:1;">
             <input type="text" class="input-details" placeholder="Escreva aqui..." oninput="this.setAttribute('value', this.value); autoSave();" style="width:100%">
         </div>
-        <button onclick="this.parentElement.remove(); autoSave();" style="border:none; background:none; cursor:pointer; color:#cbd5e1;">✕</button>
+        <button onclick="this.parentElement.remove(); autoSave();" 
+                style="border:none; background:none; cursor:pointer; color:#cbd5e1;">✕</button>
     `;
     container.appendChild(div);
     autoSave();
 }
 
-function limparJSON() {
-    const input = document.getElementById('json-input');
-    if (input.value.trim() !== "" && confirm('Deseja realmente limpar todo o texto da caixa de entrada?')) {
-        input.value = '';
-        input.focus();
-    }
-}
-
 // --- 5. EXPORTAÇÃO COMPLETA ---
+/**
+ * Empacota o HTML e gera o download com nomenclatura padronizada.
+ * Implementa a nomenclatura AAAAMMDD_dossie_[NUMERO]_HHMM.
+ */
 async function downloadBundledHTML() {
     document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked ? c.setAttribute('checked', 'checked') : c.removeAttribute('checked'));
     document.querySelectorAll('input[type="text"]').forEach(i => i.setAttribute('value', i.value));
@@ -384,36 +356,14 @@ async function downloadBundledHTML() {
     if(container) container.style.display = 'block';
 
     try {
-        const procIdValue = document.getElementById('process-id').innerText.trim() || 'sem_id';
-        
-        // Injeção do Script de Toggle no HTML baixado
-        const toggleScript = document.createElement('script');
-        toggleScript.textContent = `
-            (function() {
-                const PROCESSO_ID = "${procIdValue}";
-                function initToggle() {
-                    document.querySelectorAll('.theme-card-top').forEach(card => {
-                        const themeId = card.dataset.themeId;
-                        const key = 'themeState_' + PROCESSO_ID + '_' + themeId;
-                        if (localStorage.getItem(key) === 'inactive') card.classList.add('inactive');
-                        card.addEventListener('click', function() {
-                            this.classList.toggle('inactive');
-                            this.classList.contains('inactive') ? localStorage.setItem(key, 'inactive') : localStorage.removeItem(key);
-                        });
-                    });
-                }
-                document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', initToggle) : initToggle();
-            })();
-        `;
-        clone.body.appendChild(toggleScript);
-
         const cssLink = document.getElementById('main-css');
         if (cssLink) {
             try {
                 const cssResponse = await fetch(cssLink.href);
                 const styleTag = document.createElement('style');
                 styleTag.textContent = await cssResponse.text();
-                clone.querySelector('link[href*="style.css"]')?.replaceWith(styleTag);
+                const cloneLink = clone.querySelector('link[href*="style.css"]');
+                if(cloneLink) cloneLink.replaceWith(styleTag);
             } catch (err) { console.warn("CSS externo inacessível."); }
         }
 
@@ -422,34 +372,61 @@ async function downloadBundledHTML() {
             const jsResponse = await fetch('script.js');
             scriptTag.textContent = await jsResponse.text();
         } catch (err) {
+            console.warn("Falha ao buscar script.js. Usando fallback inline.");
+            // Busca o conteúdo deste próprio script se o fetch falhar
             scriptTag.textContent = document.scripts[document.scripts.length - 1].textContent;
         }
-        clone.querySelector('script[src*="script.js"]')?.replaceWith(scriptTag);
+
+        const cloneScript = clone.querySelector('script[src*="script.js"]');
+        if(cloneScript) cloneScript.replaceWith(scriptTag);
 
         const blob = new Blob([clone.outerHTML], {type: 'text/html'});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        const now = new Date();
-        const ts = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0');
-        const hm = String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0');
-        const safeProc = procIdValue.replace(/[^0-9]/g, '') || 'sem_processo';
-
         a.href = url;
-        a.download = `${ts}_dossie_${safeProc}_${hm}.html`;
+
+        // Lógica de nomenclatura dinâmica [Prioridade 1]
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const hh = String(now.getHours()).padStart(2, '0');
+        const min = String(now.getMinutes()).padStart(2, '0');
+
+        const rawProc = document.getElementById('process-id').innerText;
+        const procNum = rawProc.replace(/[^0-9]/g, '');
+        const processoSeguro = procNum ? procNum : 'sem_processo';
+
+        a.download = `${yyyy}${mm}${dd}_dossie_${processoSeguro}_${hh}${min}.html`;
+        
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-    } catch (e) { console.error(e); alert("Erro ao exportar: " + e.message); }
+
+    } catch (e) {
+        console.error(e);
+        alert("Erro ao empacotar arquivo: " + e.message);
+    }
 }
 
 // --- 6. DRAG & DROP ---
 function setupDrag() {
     const list = document.getElementById("sortable-list");
     if (!list) return;
+    
     let dragged = null;
-    list.ondragstart = (e) => { dragged = e.target; e.target.classList.add("dragging"); };
-    list.ondragend = (e) => { e.target.classList.remove("dragging"); dragged = null; autoSave(); };
+    list.ondragstart = (e) => { 
+        dragged = e.target; 
+        e.target.classList.add("dragging"); 
+    };
+    
+    list.ondragend = (e) => { 
+        e.target.classList.remove("dragging"); 
+        dragged = null;
+        autoSave();
+    };
+    
     list.ondragover = (e) => {
         e.preventDefault();
         const after = [...list.querySelectorAll(".checklist-item:not(.dragging)")].reduce((closest, child) => {
@@ -457,6 +434,7 @@ function setupDrag() {
             const offset = e.clientY - box.top - box.height / 2;
             return (offset < 0 && offset > closest.offset) ? { offset, element: child } : closest;
         }, { offset: Number.NEGATIVE_INFINITY }).element;
-        after == null ? list.appendChild(dragged) : list.insertBefore(dragged, after);
+        
+        if (after == null) list.appendChild(dragged); else list.insertBefore(dragged, after);
     };
 }
