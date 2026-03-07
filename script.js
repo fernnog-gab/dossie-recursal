@@ -7,7 +7,7 @@ const badgeTypes = [
     {c:'badge-joint', t:'AMBOS'} 
 ];
 
-// --- 0. INJEÇÃO DE ESTILOS (PRIORIDADE 1: ROLAGEM E UX) ---
+// --- 0. INJEÇÃO DE ESTILOS ---
 function injectGlobalStyles() {
     const style = document.createElement('style');
     style.textContent = `
@@ -30,23 +30,18 @@ function injectGlobalStyles() {
     document.head.appendChild(style);
 }
 
-// --- 1. GERAÇÃO E DOWNLOAD IMEDIATO ---
+// --- 1. GERAÇÃO E DOWNLOAD ---
 async function generatePanel() {
     try {
         const input = document.getElementById('json-input').value;
         const data = JSON.parse(input);
 
-        // A. Preenchimento de Cabeçalho
         document.getElementById('process-id').innerText = data.processo || 'S/N';
         document.getElementById('parties-display').innerText = `Partes: ${data.recorrente} x ${data.recorrido}`;
 
-        // B. Renderização do Conteúdo
         renderContent(data);
-
-        // C. Fluxo de Download Imediato
         await downloadBundledHTML();
         
-        // Feedback visual no botão de geração
         const btn = document.querySelector('.btn-generate');
         if (btn) {
             const originalText = btn.innerText;
@@ -65,7 +60,6 @@ async function generatePanel() {
 }
 
 function renderContent(data) {
-    // 1. Painel de Temas
     const themePanel = document.getElementById('theme-panel');
     themePanel.innerHTML = '';
     if (data.temas_vinculantes && data.temas_vinculantes.length > 0) {
@@ -78,7 +72,6 @@ function renderContent(data) {
         });
     }
 
-    // 2. Admissibilidade Geral
     const admGenContainer = document.getElementById('adm-general');
     admGenContainer.innerHTML = '';
     const admItems = [
@@ -89,12 +82,10 @@ function renderContent(data) {
         admGenContainer.innerHTML += createRowHTML(item.t, item.v);
     });
 
-    // 3. Representação
     const repData = data.admissibilidade?.representacao || {};
     setupRepField('autor', repData.autor);
     setupRepField('reu', repData.reu);
 
-    // 4. Trilha de Julgamento (Tópicos)
     const topicContainer = document.getElementById('sortable-list');
     topicContainer.innerHTML = '';
     
@@ -125,12 +116,13 @@ function renderContent(data) {
 
 // --- 2. PERSISTÊNCIA (AUTO-SAVE) ---
 document.addEventListener('DOMContentLoaded', () => {
-    injectGlobalStyles(); // Aplica correções de rolagem e cursor
+    injectGlobalStyles(); 
     
     const importer = document.getElementById('json-importer');
     if (!importer || importer.style.display === 'none') {
         loadState();
         setupAutoSaveListeners();
+        setupDrag(); // Inicia o drag & drop no arquivo final
     }
 });
 
@@ -141,13 +133,18 @@ function getStorageKey() {
 
 function autoSave() {
     const key = getStorageKey();
+    const sortableList = document.getElementById('sortable-list');
+    const obsList = document.getElementById('obs-list');
+    
     const state = {
         checks: Array.from(document.querySelectorAll('.chk-input')).map(el => el.checked),
         inputs: Array.from(document.querySelectorAll('input[type="text"]')).map(el => el.value),
         badges: Array.from(document.querySelectorAll('.badge')).map(el => ({ 
             class: el.className, 
             text: el.innerText 
-        }))
+        })),
+        sortableHTML: sortableList ? sortableList.innerHTML : null, // Salva ordem dos itens
+        obsHTML: obsList ? obsList.innerHTML : null // Salva novas notas
     };
     localStorage.setItem(key, JSON.stringify(state));
 }
@@ -160,6 +157,18 @@ function loadState() {
     try {
         const state = JSON.parse(saved);
         
+        // Restaura estrutura HTML antes de preencher valores
+        const sortableList = document.getElementById('sortable-list');
+        if (sortableList && state.sortableHTML) {
+            sortableList.innerHTML = state.sortableHTML;
+            setupDrag(); 
+        }
+
+        const obsList = document.getElementById('obs-list');
+        if (obsList && state.obsHTML) {
+            obsList.innerHTML = state.obsHTML;
+        }
+
         const checks = document.querySelectorAll('.chk-input');
         state.checks.forEach((val, i) => { 
             if(checks[i]) { 
@@ -179,7 +188,7 @@ function loadState() {
             } 
         });
     } catch (e) {
-        console.error("Erro ao carregar estado salvo:", e);
+        console.error("Erro ao carregar estado:", e);
     }
 }
 
@@ -215,21 +224,14 @@ function createRowHTML(title, value = '') {
         </div>`;
 }
 
-// [ATUALIZADO] Função robusta para alternância de Badges (Prioridade 1)
 function rotateBadge(el) {
     const states = ['badge-author', 'badge-defendant', 'badge-joint'];
     const texts = ['AUTOR', 'RÉU', 'AMBOS'];
-    
-    let currentIdx = 0;
-    if (el.classList.contains('badge-defendant')) currentIdx = 1;
-    else if (el.classList.contains('badge-joint')) currentIdx = 2;
-    
+    let currentIdx = states.indexOf(el.classList.contains('badge-defendant') ? 'badge-defendant' : (el.classList.contains('badge-joint') ? 'badge-joint' : 'badge-author'));
     const nextIdx = (currentIdx + 1) % 3;
-    
     el.classList.remove(...states);
     el.classList.add(states[nextIdx]);
     el.innerText = texts[nextIdx];
-    
     autoSave();
 }
 
@@ -248,20 +250,18 @@ function addNewObs() {
             <input type="text" class="input-details" placeholder="Escreva aqui..." oninput="this.setAttribute('value', this.value); autoSave();" style="width:100%">
         </div>
         <button onclick="this.parentElement.remove(); autoSave();" 
-                title="Remover observação"
                 style="border:none; background:none; cursor:pointer; color:#cbd5e1;">✕</button>
     `;
     container.appendChild(div);
     autoSave();
 }
 
-// --- 4. EXPORTAÇÃO E PERSISTÊNCIA COMPLETA ---
+// --- 4. EXPORTAÇÃO COMPLETA ---
 async function downloadBundledHTML() {
     document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked ? c.setAttribute('checked', 'checked') : c.removeAttribute('checked'));
     document.querySelectorAll('input[type="text"]').forEach(i => i.setAttribute('value', i.value));
     
     const clone = document.documentElement.cloneNode(true);
-    
     const importer = clone.querySelector('#json-importer');
     if(importer) importer.remove();
     
@@ -269,6 +269,7 @@ async function downloadBundledHTML() {
     if(container) container.style.display = 'block';
 
     try {
+        // Injeção de CSS
         const cssLink = document.getElementById('main-css');
         if (cssLink) {
             try {
@@ -277,12 +278,18 @@ async function downloadBundledHTML() {
                 styleTag.textContent = await cssResponse.text();
                 const cloneLink = clone.querySelector('link[href*="style.css"]');
                 if(cloneLink) cloneLink.replaceWith(styleTag);
-            } catch (err) { console.warn("CSS externo não acessível."); }
+            } catch (err) { console.warn("CSS externo inacessível."); }
         }
 
+        // Lógica aprimorada para capturar o JS e embutir no arquivo final
         const scriptTag = document.createElement('script');
-        scriptTag.textContent = document.querySelector('script[src*="script.js"]')?.textContent || 
-                                document.scripts[document.scripts.length - 1].textContent;
+        try {
+            const jsResponse = await fetch('script.js');
+            scriptTag.textContent = await jsResponse.text();
+        } catch (err) {
+            console.warn("Falha ao buscar script.js. Usando fallback inline.");
+            scriptTag.textContent = document.scripts[document.scripts.length - 1].textContent;
+        }
 
         const cloneScript = clone.querySelector('script[src*="script.js"]');
         if(cloneScript) cloneScript.replaceWith(scriptTag);
@@ -310,18 +317,18 @@ function setupDrag() {
     if (!list) return;
     
     let dragged = null;
-    list.addEventListener("dragstart", e => { 
+    list.ondragstart = (e) => { 
         dragged = e.target; 
-        setTimeout(()=>e.target.classList.add("dragging"),0); 
-    });
+        e.target.classList.add("dragging"); 
+    };
     
-    list.addEventListener("dragend", e => { 
-        setTimeout(()=>e.target.classList.remove("dragging"),0); 
+    list.ondragend = (e) => { 
+        e.target.classList.remove("dragging"); 
         dragged = null;
         autoSave();
-    });
+    };
     
-    list.addEventListener("dragover", e => {
+    list.ondragover = (e) => {
         e.preventDefault();
         const after = [...list.querySelectorAll(".checklist-item:not(.dragging)")].reduce((closest, child) => {
             const box = child.getBoundingClientRect();
@@ -330,5 +337,5 @@ function setupDrag() {
         }, { offset: Number.NEGATIVE_INFINITY }).element;
         
         if (after == null) list.appendChild(dragged); else list.insertBefore(dragged, after);
-    });
+    };
 }
