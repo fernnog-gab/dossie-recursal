@@ -82,18 +82,22 @@ function renderContent(data) {
         admGenContainer.innerHTML += createRowHTML(item.t, item.v);
     });
 
+    // CORREÇÃO 1: Mapeamento da Representação Processual
     const repData = data.admissibilidade?.representacao || {};
-    setupRepField('autor', repData.autor);
-    setupRepField('reu', repData.reu);
+    setupRepField('autor', repData.autor_da_acao); // Busca o exato "autor_da_acao" do JSON
+    setupRepField('reu', repData.reu_da_acao);     // Busca o exato "reu_da_acao" do JSON
 
     const topicContainer = document.getElementById('sortable-list');
     topicContainer.innerHTML = '';
     
-    if(data.topicos) {
-        data.topicos.forEach(topic => {
+    // CORREÇÃO 2: Mapeamento da Trilha de Julgamento (Tópicos)
+    if(data.topicos_do_recurso) { 
+        data.topicos_do_recurso.forEach(topic => {
             let partyClass = 'badge-author'; let partyText = 'AUTOR';
-            if(topic.autor === 'RÉU') { partyClass = 'badge-defendant'; partyText = 'RÉU'; }
-            if(topic.autor === 'AMBOS') { partyClass = 'badge-joint'; partyText = 'AMBOS'; }
+            
+            // CORREÇÃO 3: Mapeamento de quem recorre
+            if(topic.quem_recorre === 'RÉU DA AÇÃO') { partyClass = 'badge-defendant'; partyText = 'RÉU'; }
+            if(topic.quem_recorre === 'AMBOS') { partyClass = 'badge-joint'; partyText = 'AMBOS'; }
 
             let themeBadgeHTML = topic.tema_numero ? `<span class="badge-theme-tag">${topic.tema_numero}</span>` : '';
 
@@ -122,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!importer || importer.style.display === 'none') {
         loadState();
         setupAutoSaveListeners();
-        setupDrag(); // Inicia o drag & drop no arquivo final
+        setupDrag(); 
     }
 });
 
@@ -143,8 +147,8 @@ function autoSave() {
             class: el.className, 
             text: el.innerText 
         })),
-        sortableHTML: sortableList ? sortableList.innerHTML : null, // Salva ordem dos itens
-        obsHTML: obsList ? obsList.innerHTML : null // Salva novas notas
+        sortableHTML: sortableList ? sortableList.innerHTML : null,
+        obsHTML: obsList ? obsList.innerHTML : null 
     };
     localStorage.setItem(key, JSON.stringify(state));
 }
@@ -157,7 +161,6 @@ function loadState() {
     try {
         const state = JSON.parse(saved);
         
-        // Restaura estrutura HTML antes de preencher valores
         const sortableList = document.getElementById('sortable-list');
         if (sortableList && state.sortableHTML) {
             sortableList.innerHTML = state.sortableHTML;
@@ -191,7 +194,7 @@ function loadState() {
             } 
         });
 
-        checkRepStatus(); // Garante a cor correta da representação ao carregar
+        checkRepStatus(); 
     } catch (e) {
         console.error("Erro ao carregar estado:", e);
     }
@@ -216,7 +219,7 @@ function setupRepField(type, dataObj) {
         input.value = dataObj.obs;
         input.setAttribute('value', dataObj.obs);
     }
-    checkRepStatus(); // Atualiza o status visual da linha de representação
+    checkRepStatus(); 
 }
 
 function checkRepStatus() {
@@ -225,7 +228,6 @@ function checkRepStatus() {
     const row = document.getElementById('rep-row-main');
 
     if (chkAutor && chkReu && row) {
-        // Regra de Negócio: Linha fica verde apenas se AMBOS estiverem marcados
         if (chkAutor.checked && chkReu.checked) {
             row.classList.add('completed');
         } else {
@@ -236,7 +238,6 @@ function checkRepStatus() {
 }
 
 function createRowHTML(title, value = '') {
-    // Layout aprimorado: Input ocupa linha cheia abaixo do título
     return `
         <div class="checklist-item" style="align-items: flex-start; flex-wrap: wrap;">
             <input type="checkbox" class="chk-input" style="margin-top: 5px;" onchange="toggleRow(this); autoSave();" checked> 
@@ -297,7 +298,6 @@ async function downloadBundledHTML() {
     if(container) container.style.display = 'block';
 
     try {
-        // Injeção de CSS
         const cssLink = document.getElementById('main-css');
         if (cssLink) {
             try {
@@ -309,7 +309,6 @@ async function downloadBundledHTML() {
             } catch (err) { console.warn("CSS externo inacessível."); }
         }
 
-        // Lógica de embutir o JS no arquivo final
         const scriptTag = document.createElement('script');
         try {
             const jsResponse = await fetch('script.js');
