@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Julgamento</title>
+    <link rel="stylesheet" href="style.css" id="main-css">
+</head>
+<body>
+
+    <div id="json-importer">
+        <h2 style="color: #0f172a; margin-bottom: 10px;">Gerador de Painel</h2>
+        <p style="color: #64748b; margin-bottom: 20px;">Cole o JSON gerado pelo Gemini abaixo:</p>
+        <textarea id="json-input" placeholder='Cole o JSON aqui...'></textarea>
+        
+        <div style="display: flex; gap: 15px; justify-content: center;">
+            <button class="btn-generate" onclick="generatePanel()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                    <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path>
+                    <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path>
+                    <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path>
+                    <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path>
+                </svg>
+                Gerar Painel
+            </button>
+
+            <button class="btn-clear" onclick="limparJSON()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                    <path d="M3 6h18"></path>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                    <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                Limpar
+            </button>
+        </div>
+
+        <div style="display: flex; gap: 15px; justify-content: center; margin-top: 20px; border-top: 1px dashed #cbd5e1; padding-top: 20px; align-items: center; flex-wrap: wrap;">
+            <button class="btn-session" onclick="exportSession()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Salvar Sessão (.trtstate)
+            </button>
+        
+            <button class="btn-session" onclick="triggerImport()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                Carregar Sessão
+            </button>
+            <input type="file" id="file-import-session" style="display: none;" accept=".trtstate,.json" onchange="importSession(event)">
+        
+            <div id="sync-status" class="sync-status status-synced" style="display: none;">
+                <span class="status-dot"></span> <span id="sync-text">Sincronizado</span>
+            </div>
+        </div>
+        </div>
+
+    <div class="container" id="panel-container">
+        
+        <header>
+            <div class="header-content">
+                <small class="header-label">TRIBUNAL REGIONAL DO TRABALHO - PORTÁTIL</small>
+                <h1 id="process-id">0000000-00.0000.5.23.0000</h1>
+                <div id="parties-display" style="font-weight: 500; margin-top:5px;">Partes: ...</div>
+            </div>
+            <div class="header-actions">
+                <button class="btn-save-file" onclick="downloadBundledHTML()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                        <polyline points="7 3 7 8 15 8"></polyline>
+                    </svg>
+                    Salvar e Baixar Cópia
+                </button>
+            </div>
+        </header>
+
+        <div class="section-title">1. Admissibilidade & Pressupostos</div>
+        <div class="checklist-container" id="admissibility-list">
+            <div id="adm-general"></div>
+            
+            <div class="checklist-item representation-row" id="rep-row-main" style="display:block;">
+                <div style="width: 100%;">
+                    <div style="font-weight: 600; font-size: 0.9rem; margin-bottom: 8px; color: #334155;">Representação Processual</div>
+                    <div class="rep-grid">
+                        <div class="rep-col">
+                            <label class="rep-label"><input type="checkbox" class="chk-input" id="chk-rep-autor" onchange="checkRepStatus()"> Autor:</label>
+                            <input type="text" class="input-details" id="input-rep-autor" placeholder="ID Procuração..." oninput="this.setAttribute('value', this.value); autoSave()">
+                        </div>
+                        <div class="rep-col">
+                            <label class="rep-label"><input type="checkbox" class="chk-input" id="chk-rep-reu" onchange="checkRepStatus()"> Réu:</label>
+                            <input type="text" class="input-details" id="input-rep-reu" placeholder="ID Procuração..." oninput="this.setAttribute('value', this.value); autoSave()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title">2. Painel de Temas Vinculantes</div>
+        <div id="theme-panel"></div>
+
+        <div class="section-title">3. Trilha de Julgamento (Arraste para Reordenar)</div>
+        <div class="checklist-container" id="sortable-list"></div>
+        
+        <button class="btn-add-row btn-add-topic" onclick="addNewTopic()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            ADICIONAR NOVO TÓPICO
+        </button>
+
+        <div class="section-title">4. Observações Gerais</div>
+        <div class="checklist-container" id="obs-list"></div>
+        <button class="btn-add-row" onclick="addNewObs()">+ ADICIONAR OBSERVAÇÃO</button>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
