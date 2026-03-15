@@ -201,26 +201,3 @@ header { background-color: var(--primary-navy); color: white; padding: 25px 40px
 .input-full-width:focus {
     border-color: var(--author-border);
 }
-
-/* Sincronização de Estado e Indicador Visual */
-.btn-session {
-    background: #f8fafc; color: var(--primary-navy); padding: 10px 20px;
-    border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem;
-    cursor: pointer; font-weight: 600; display: flex; align-items: center;
-    justify-content: center; transition: all 0.2s ease;
-}
-
-.btn-session:hover { background: #e2e8f0; border-color: #94a3b8; }
-
-.sync-status {
-    display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600;
-    padding: 6px 12px; border-radius: 20px; transition: all 0.3s ease;
-}
-
-.status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-
-.status-synced { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
-.status-synced .status-dot { background: #22c55e; }
-
-.status-unsaved { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
-.status-unsaved .status-dot { background: #f59e0b; }

@@ -177,17 +177,12 @@ function getStorageKey() {
     return 'dossie_' + procId.replace(/[^a-zA-Z0-9]/g, '_');
 }
 
-/**
- * Versão Evoluída: Salva o estado completo incluindo cabeçalhos e dispara status de sincronização.
- */
 function autoSave() {
     const key = getStorageKey();
     const sortableList = document.getElementById('sortable-list');
     const obsList = document.getElementById('obs-list');
     
     const state = {
-        processo: document.getElementById('process-id').innerText, 
-        partes: document.getElementById('parties-display').innerText, 
         checks: Array.from(document.querySelectorAll('.chk-input')).map(el => el.checked),
         inputs: Array.from(document.querySelectorAll('input[type="text"]')).map(el => el.value),
         badges: Array.from(document.querySelectorAll('.badge')).map(el => ({ 
@@ -198,8 +193,6 @@ function autoSave() {
         obsHTML: obsList ? obsList.innerHTML : null 
     };
     localStorage.setItem(key, JSON.stringify(state));
-    
-    updateSyncStatus(false); // Dispara o farol de 'Alterações Pendentes'
 }
 
 function loadState() {
@@ -334,6 +327,10 @@ function addNewObs() {
     autoSave();
 }
 
+/**
+ * Adiciona um novo tópico manualmente à Trilha de Julgamento.
+ * Implementa a funcionalidade de adição dinâmica com suporte a Drag & Drop.
+ */
 function addNewTopic() {
     const container = document.getElementById('sortable-list');
     if (!container) return;
@@ -452,82 +449,4 @@ function setupDrag() {
         
         if (after == null) list.appendChild(dragged); else list.insertBefore(dragged, after);
     };
-}
-
-// --- 7. SINCRONIZAÇÃO E SESSÃO ---
-
-function updateSyncStatus(isSynced) {
-    const statusDiv = document.getElementById('sync-status');
-    const statusText = document.getElementById('sync-text');
-    if(!statusDiv) return;
-    
-    statusDiv.style.display = 'flex';
-    if(isSynced) {
-        statusDiv.className = 'sync-status status-synced';
-        statusText.innerText = 'Sincronizado no Drive';
-    } else {
-        statusDiv.className = 'sync-status status-unsaved';
-        statusText.innerText = 'Alterações Pendentes';
-    }
-}
-
-function exportSession() {
-    const key = getStorageKey();
-    const state = localStorage.getItem(key);
-    
-    if (!state) {
-        alert("Nenhuma alteração encontrada para salvar.");
-        return;
-    }
-
-    const blob = new Blob([state], {type: "application/json"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    
-    const stateObj = JSON.parse(state);
-    const rawProc = stateObj.processo || document.getElementById('process-id').innerText;
-    const procNum = rawProc.replace(/[^0-9]/g, '') || 'sem_processo';
-    a.download = `sessao_${procNum}.trtstate`;
-    
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    updateSyncStatus(true); 
-}
-
-function triggerImport() { 
-    document.getElementById('file-import-session').click(); 
-}
-
-function importSession(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const state = JSON.parse(e.target.result);
-            
-            if(state.processo) {
-                document.getElementById('process-id').innerText = state.processo;
-                document.getElementById('parties-display').innerText = state.partes || 'Partes: ...';
-                document.getElementById('panel-container').style.display = 'block';
-            }
-
-            const currentKey = getStorageKey();
-            localStorage.setItem(currentKey, JSON.stringify(state));
-            loadState(); 
-            
-            updateSyncStatus(true); 
-            alert("Sessão carregada com sucesso!");
-        } catch (err) {
-            alert("Erro ao ler o arquivo. O arquivo pode estar corrompido.");
-            console.error(err);
-        }
-        event.target.value = ''; 
-    };
-    reader.readAsText(file);
 }
