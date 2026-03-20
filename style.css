@@ -108,26 +108,32 @@ header { background-color: var(--primary-navy); color: white; padding: 25px 40px
   background-color: #f8fafc; /* Destaque visual (Ponto D) */
 }
 
-/* Novas regras para o Subtópico */
+/* --- NOVA UI PARA SUBNÍVEIS --- */
 .checklist-item.is-subtopic {
-  margin-left: 40px;
-  width: calc(100% - 40px);
-  background-color: #f8fafc;
-  border-left: 2px solid var(--border-color);
-  border-radius: 0 8px 8px 0;
+  /* Correção do bug do corte */
+  padding-left: 60px;
+  width: 100%;
+  box-sizing: border-box;
+
+  /* Refinamento Visual */
+  background-color: #f1f5f9;
+  border-left: 4px solid var(--border-color);
+  border-radius: 0;
 }
 
-/* Linha conectora estilo "árvore/raiz" */
+/* Remoção da linha em 'L' antiga */
 .checklist-item.is-subtopic::before {
-  content: "";
-  position: absolute;
-  left: -20px;
-  top: 0;
-  width: 20px;
-  height: 22px;
-  border-left: 2px solid #cbd5e1;
-  border-bottom: 2px solid #cbd5e1;
-  border-bottom-left-radius: 6px;
+  display: none;
+}
+
+/* Redução tipográfica para reforçar hierarquia */
+.checklist-item.is-subtopic .item-title {
+  font-size: 0.88rem;
+  color: var(--text-sub);
+}
+
+.checklist-item.is-subtopic .item-title-input {
+  font-size: 0.88rem;
 }
 
 .drag-handle {
