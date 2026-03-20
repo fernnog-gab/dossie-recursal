@@ -406,3 +406,13 @@ header {
 .input-full-width:focus {
   border-color: var(--author-border);
 }
+
+/* Muda a cor do handle para o mesmo cinza ardósia das linhas pontilhadas */
+.checklist-item.has-children .drag-handle {
+    color: #94a3b8; 
+}
+
+/* Preenche (pinta) o interior dos 6 círculos do SVG que antes eram vazados */
+.checklist-item.has-children .drag-handle svg circle {
+    fill: currentColor;
+}
