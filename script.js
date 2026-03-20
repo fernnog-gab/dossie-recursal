@@ -66,22 +66,19 @@ function injectGlobalStyles() {
         
         /* Modificadores de Subtópico */
         .checklist-item.is-subtopic {
-            margin-left: 40px;
-            width: calc(100% - 40px);
-            background-color: #f8fafc;
-            border-left: 2px solid var(--border-color);
-            border-radius: 0 8px 8px 0;
+            padding-left: 60px;
+            width: 100%;
+            box-sizing: border-box;
+            background-color: #f1f5f9;
+            border-left: 4px solid var(--border-color);
+            border-radius: 0;
         }
         .checklist-item.is-subtopic::before {
-            content: "";
-            position: absolute;
-            left: -20px;
-            top: 0;
-            width: 20px;
-            height: 22px;
-            border-left: 2px solid var(--border-color);
-            border-bottom: 2px solid var(--border-color);
-            border-bottom-left-radius: 6px;
+            display: none;
+        }
+        .checklist-item.is-subtopic .item-title {
+            font-size: 0.88rem;
+            color: var(--text-sub);
         }
 
         /* Classe utilitária para Drag & Drop de filhos */
