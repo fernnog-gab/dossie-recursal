@@ -16,148 +16,6 @@ const SVG_INDENT = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" 
 
 const SVG_OUTDENT = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>`;
 
-const badgeTypes = [ 
-    {c:'badge-author', t:'AUTOR'}, 
-    {c:'badge-defendant', t:'RÉU'}, 
-    {c:'badge-joint', t:'AMBOS'} 
-];
-
-// --- 0. INJEÇÃO DE ESTILOS ---
-function injectGlobalStyles() {
-    const style = document.createElement('style');
-    style.textContent = `
-        :root {
-            --text-sub: #475569; 
-            --border-color: #cbd5e1;
-        }
-        body { 
-            display: block !important; 
-            overflow-y: auto !important; 
-            height: auto !important; 
-        }
-        .container { 
-            overflow: visible !important; 
-            padding-bottom: 60px; 
-            max-width: 950px;
-            margin: 0 auto;
-        }
-        
-        .rep-grid { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 16px; 
-            width: 100%; 
-        }
-
-        .checklist-item { 
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between; 
-            padding: 12px 20px; 
-            border-bottom: 1px solid #f1f5f9; 
-            background: #fff; 
-            min-height: 45px; 
-            transition: background-color 0.2s ease, margin 0.3s ease;
-            position: relative;
-        }
-        .checklist-item:hover {
-            background-color: #f8fafc;
-        }
-        
-        /* Modificadores de Subtópico */
-        .checklist-item.is-subtopic {
-            padding-left: 60px;
-            width: 100%;
-            box-sizing: border-box;
-            background-color: #f1f5f9;
-            border-left: 4px solid var(--border-color);
-            border-radius: 0;
-        }
-        .checklist-item.is-subtopic::before {
-            display: none;
-        }
-        .checklist-item.is-subtopic .item-title {
-            font-size: 0.88rem;
-            color: var(--text-sub);
-        }
-
-        /* Classe utilitária para Drag & Drop de filhos */
-        .dragging-child {
-            display: none !important;
-        }
-
-        .item-content { 
-            flex: 1 1 auto; 
-            display: flex; 
-            align-items: center; 
-            gap: 10px; 
-            flex-wrap: wrap; 
-            margin-right: 15px; 
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 6px;
-            margin-right: 12px;
-            align-items: center;
-        }
-        .btn-icon {
-            background: transparent;
-            border: none;
-            color: #94a3b8;
-            cursor: pointer;
-            padding: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 4px;
-            transition: all 0.2s ease;
-        }
-        .btn-icon:hover {
-            background-color: #f1f5f9;
-        }
-        .btn-icon.icon-indent:hover {
-            color: #ea580c;
-        }
-        .btn-icon.icon-edit:hover {
-            color: #2563eb;
-        }
-        .btn-icon.icon-delete:hover {
-            color: #dc2626;
-        }
-
-        .drag-handle {
-            cursor: grab;
-            color: #94a3b8;
-            margin-right: 12px;
-            display: flex;
-            align-items: center;
-        }
-        .checklist-item[draggable="true"]:active,
-        .checklist-item[draggable="true"]:active .drag-handle {
-            cursor: grabbing;
-        }
-
-        .badge { 
-            cursor: pointer; 
-            user-select: none; 
-            transition: opacity 0.2s ease; 
-        }
-        .badge:hover { opacity: 0.8; }
-        .item-title { color: var(--text-sub); }
-
-        .item-title-input {
-            width: 100%;
-            padding: 4px 8px;
-            border: 1px solid #e2e8f0;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            outline-color: #2563eb;
-        }
-    `;
-    document.head.appendChild(style);
-}
-
 // --- 1. NORMALIZAÇÃO E TRADUTOR FLEXÍVEL ---
 function normalizeData(data) {
     const mapping = {
@@ -192,12 +50,11 @@ async function generatePanel() {
         document.getElementById('parties-display').innerText = `Partes: ${data.recorrente || ''} x ${data.recorrido || ''}`;
 
         renderContent(data);
-        await downloadBundledHTML();
         
         const btn = document.querySelector('.btn-generate');
         if (btn) {
             const originalText = btn.innerText;
-            btn.innerText = "✅ Arquivo Baixado!";
+            btn.innerText = "✅ Painel Gerado!";
             btn.style.backgroundColor = "#16a34a";
             setTimeout(() => {
                 btn.innerText = originalText;
@@ -283,7 +140,7 @@ function renderContent(data) {
                     <div class="action-buttons">
                         <button class="btn-icon icon-indent" onclick="toggleSubtopic(this)" title="Transformar em Subtópico">${SVG_INDENT}</button>
                         <button class="btn-icon icon-edit" onclick="editTopicTitle(this)" title="Renomear Tópico">${SVG_EDIT}</button>
-                        <button class="btn-icon icon-delete" onclick="if(confirm('Deseja realmente remover este tópico?')) this.closest('.checklist-item').remove()" title="Excluir Tópico">${SVG_DELETE}</button>
+                        <button class="btn-icon icon-delete" onclick="if(confirm('Deseja realmente remover este tópico?')) { this.closest('.checklist-item').remove(); updateTreeLines(); }" title="Excluir Tópico">${SVG_DELETE}</button>
                     </div>
                     <input type="checkbox" class="chk-input" onchange="toggleRow(this);">
                     <div class="item-content">
@@ -298,16 +155,55 @@ function renderContent(data) {
         });
     }
     setupDrag();
+    updateTreeLines(); // Aplica as linhas ao gerar o conteúdo
 }
 
-// --- 3. INICIALIZAÇÃO LIMPA ---
+// --- 3. INICIALIZAÇÃO LIMPA E ATUALIZAÇÃO DE LINHAS ---
 document.addEventListener('DOMContentLoaded', () => {
-    injectGlobalStyles(); 
     const importer = document.getElementById('json-importer');
     if (!importer || importer.style.display === 'none') {
         setupDrag(); 
+        updateTreeLines();
     }
+    // Garante que as linhas se ajustem caso a tela mude de tamanho
+    window.addEventListener('resize', updateTreeLines);
 });
+
+// FUNÇÃO MATEMÁTICA PARA DESENHAR AS LINHAS DA ÁRVORE (ESPINHA DORSAL)
+function updateTreeLines() {
+    const list = document.getElementById('sortable-list');
+    if (!list) return;
+    const items = list.querySelectorAll('.checklist-item');
+    
+    items.forEach((item, index) => {
+        // Limpa linhas antigas
+        const oldLine = item.querySelector('.tree-line');
+        if (oldLine) oldLine.remove();
+
+        if (item.classList.contains('is-subtopic')) {
+            // Encontra o item imediatamente anterior para servir de âncora
+            const prev = items[index - 1];
+            if (prev) {
+                const line = document.createElement('div');
+                line.className = 'tree-line';
+                
+                // Captura as caixas delimitadoras exatas
+                const itemRect = item.getBoundingClientRect();
+                const prevRect = prev.getBoundingClientRect();
+                
+                // Calcula a distância do centro do item anterior até o topo do item atual
+                const topOffset = (prevRect.top + prevRect.height / 2) - itemRect.top;
+                
+                // Desenha a linha começando do centro do item de cima
+                line.style.top = topOffset + 'px';
+                // Desce a linha até exatamente a metade (50%) do item atual
+                line.style.bottom = '50%'; 
+                
+                item.appendChild(line);
+            }
+        }
+    });
+}
 
 // --- 4. HELPERS DE INTERAÇÃO ---
 function setupRepField(type, dataObj) {
@@ -385,6 +281,7 @@ function saveTopicTitle(input) {
     const originalTooltip = input.getAttribute('data-orig-tooltip') || '';
     const contentDiv = input.closest('.item-content');
     contentDiv.innerHTML = `<span class="item-title" title="${originalTooltip}">${newTitle}</span>`;
+    updateTreeLines(); // Recalcula as linhas caso a mudança de texto tenha alterado a altura do item
 }
 
 function toggleSubtopic(btn) {
@@ -405,6 +302,9 @@ function toggleSubtopic(btn) {
         btn.innerHTML = SVG_INDENT;
         btn.title = "Transformar em Subtópico";
     }
+    
+    // Atualiza a matemática das linhas de conexão
+    updateTreeLines();
 }
 
 function addNewObs() {
@@ -435,17 +335,18 @@ function addNewTopic() {
         <div class="action-buttons">
             <button class="btn-icon icon-indent" onclick="toggleSubtopic(this)" title="Transformar em Subtópico">${SVG_INDENT}</button>
             <button class="btn-icon icon-edit" onclick="editTopicTitle(this)" title="Renomear Tópico">${SVG_EDIT}</button>
-            <button class="btn-icon icon-delete" onclick="if(confirm('Deseja realmente remover este tópico?')) this.closest('.checklist-item').remove()" title="Excluir Tópico">${SVG_DELETE}</button>
+            <button class="btn-icon icon-delete" onclick="if(confirm('Deseja realmente remover este tópico?')) { this.closest('.checklist-item').remove(); updateTreeLines(); }" title="Excluir Tópico">${SVG_DELETE}</button>
         </div>
         <input type="checkbox" class="chk-input" onchange="toggleRow(this);">
         <div class="item-content">
-            <input type="text" class="item-title-input" placeholder="Digite o nome do tópico..." oninput="this.setAttribute('value', this.value);">
+            <input type="text" class="item-title-input" placeholder="Digite o nome do tópico..." oninput="this.setAttribute('value', this.value);" onblur="saveTopicTitle(this)" onkeypress="if(event.key === 'Enter') this.blur();">
         </div>
         <span class="badge badge-author" onclick="rotateBadge(this);" title="Clique para alternar entre AUTOR, RÉU e AMBOS">AUTOR</span>
     `;
     
     container.appendChild(div);
     setupDrag(); 
+    updateTreeLines();
     
     const novoInput = div.querySelector('.item-title-input');
     if(novoInput) novoInput.focus();
@@ -516,7 +417,7 @@ async function downloadBundledHTML() {
     }
 }
 
-// --- 6. DRAG & DROP (Atualizado com Lógica de Aninhamento) ---
+// --- 6. DRAG & DROP (Atualizado para Linhas Dinâmicas) ---
 function setupDrag() {
     const list = document.getElementById("sortable-list");
     if (!list) return;
@@ -530,13 +431,15 @@ function setupDrag() {
             dragged = target; 
             dragged.classList.add("dragging"); 
             
-            // Lógica para capturar subtópicos associados (Prioridade 3)
+            // Adiciona classe na lista pai para ocultar linhas vermelhas suavemente
+            list.classList.add('is-dragging');
+            
             draggedChildren = [];
             if (!dragged.classList.contains('is-subtopic')) {
                 let next = dragged.nextElementSibling;
                 while (next && next.classList.contains('is-subtopic')) {
                     draggedChildren.push(next);
-                    next.classList.add("dragging-child"); // Oculta durante o arrasto
+                    next.classList.add("dragging-child"); 
                     next = next.nextElementSibling;
                 }
             }
@@ -547,15 +450,19 @@ function setupDrag() {
         if (dragged) {
             dragged.classList.remove("dragging"); 
             dragged = null;
-            // Restaura a visibilidade dos subtópicos
+            
+            // Restaura a visibilidade
             draggedChildren.forEach(child => child.classList.remove("dragging-child"));
             draggedChildren = [];
+            
+            // Remove a classe de proteção e recalcula as linhas após soltar
+            list.classList.remove('is-dragging');
+            updateTreeLines();
         }
     };
     
     list.ondragover = (e) => {
         e.preventDefault();
-        // Ignora o item sendo arrastado e seus filhos ocultos no cálculo de posição
         const afterElement = [...list.querySelectorAll(".checklist-item:not(.dragging):not(.dragging-child)")].reduce((closest, child) => {
             const box = child.getBoundingClientRect();
             const offset = e.clientY - box.top - box.height / 2;
@@ -572,7 +479,7 @@ function setupDrag() {
             } else {
                 list.insertBefore(dragged, afterElement);
             }
-            // Move os filhos imediatamente para logo após o pai recém-posicionado
+            
             let currentRef = dragged;
             draggedChildren.forEach(child => {
                 list.insertBefore(child, currentRef.nextSibling);
