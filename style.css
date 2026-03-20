@@ -1,40 +1,49 @@
 :root {
-  --bg-page: #f8fafc; --bg-card: #ffffff; --primary-navy: #0f172a; 
-  --author-color: #2563eb; --author-bg: #eff6ff; --author-border: #bfdbfe;
-  --defendant-color: #dc2626; --defendant-bg: #fef2f2; --defendant-border: #fecaca;
-  --joint-color: #9333ea; --joint-bg: #f3e8ff; --joint-border: #e9d5ff;
+  --bg-page: #f8fafc; 
+  --bg-card: #ffffff; 
+  --primary-navy: #0f172a; 
+  --author-color: #2563eb; 
+  --author-bg: #eff6ff; 
+  --author-border: #bfdbfe;
+  --defendant-color: #dc2626; 
+  --defendant-bg: #fef2f2; 
+  --defendant-border: #fecaca;
+  --joint-color: #9333ea; 
+  --joint-bg: #f3e8ff; 
+  --joint-border: #e9d5ff;
   --text-main: #334155; 
-  --text-sub: #475569; /* Escurecido para melhor contraste (Ponto C) */
-  --border-color: #e2e8f0; --success-green: #059669;
-  --theme-orange: #f97316; --theme-bg-orange: #ffedd5; --theme-border-orange: #fed7aa;
+  --text-sub: #475569; 
+  --border-color: #e2e8f0; 
+  --success-green: #059669;
+  --theme-orange: #f97316; 
+  --theme-bg-orange: #ffedd5; 
+  --theme-border-orange: #fed7aa;
 }
 
-/* Correção do comportamento de rolagem no Body */
 body { 
   font-family: 'Segoe UI', Roboto, sans-serif; 
   background-color: var(--bg-page); 
   color: var(--text-main); 
   margin: 0; 
   padding: 20px; 
-  display: block; 
-  overflow-y: auto; 
+  display: block !important; 
+  overflow-y: auto !important; 
+  height: auto !important; 
 }
 
-/* Container atualizado para não cortar conteúdo */
 .container { 
   max-width: 950px; 
   width: 100%; 
   background: var(--bg-card); 
   border-radius: 12px; 
   box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
-  overflow: visible; 
+  overflow: visible !important; 
   margin: 0 auto;
-  padding-bottom: 50px; 
+  padding-bottom: 60px; 
   display: none; 
   margin-bottom: 40px;
 }
 
-/* Importador */
 #json-importer { 
   max-width: 800px; 
   width: 100%; 
@@ -46,9 +55,19 @@ body {
   margin: 20px auto;
 }
 
-textarea { width: 100%; height: 200px; padding: 15px; border: 2px solid #cbd5e1; border-radius: 8px; font-family: monospace; font-size: 0.9rem; margin-bottom: 20px; resize: vertical; box-sizing: border-box; }
+textarea { 
+  width: 100%; 
+  height: 200px; 
+  padding: 15px; 
+  border: 2px solid #cbd5e1; 
+  border-radius: 8px; 
+  font-family: monospace; 
+  font-size: 0.9rem; 
+  margin-bottom: 20px; 
+  resize: vertical; 
+  box-sizing: border-box; 
+}
 
-/* Botões de Ação Principal */
 .btn-generate { 
   background: var(--success-green); 
   color: white; 
@@ -84,13 +103,41 @@ textarea { width: 100%; height: 200px; padding: 15px; border: 2px solid #cbd5e1;
   border-color: #ef4444;
 }
 
-/* Header & Seções */
-header { background-color: var(--primary-navy); color: white; padding: 25px 40px; border-bottom: 4px solid var(--theme-orange); display:flex; justify-content:space-between; align-items:center; }
-.header-label { opacity:0.7; letter-spacing:1px; font-size:0.7rem; display: block; margin-bottom: 5px; text-transform: uppercase;}
-.section-title { font-size: 0.9rem; color: var(--text-sub); margin: 30px 40px 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+header { 
+  background-color: var(--primary-navy); 
+  color: white; 
+  padding: 25px 40px; 
+  border-bottom: 4px solid var(--theme-orange); 
+  display:flex; 
+  justify-content:space-between; 
+  align-items:center; 
+}
 
-/* Checklist & Itens */
-.checklist-container { background: #fff; border: 1px solid var(--border-color); border-radius: 8px; margin: 0 40px; overflow: hidden; }
+.header-label { 
+  opacity:0.7; 
+  letter-spacing:1px; 
+  font-size:0.7rem; 
+  display: block; 
+  margin-bottom: 5px; 
+  text-transform: uppercase;
+}
+
+.section-title { 
+  font-size: 0.9rem; 
+  color: var(--text-sub); 
+  margin: 30px 40px 10px; 
+  font-weight: 700; 
+  text-transform: uppercase; 
+  letter-spacing: 0.5px; 
+}
+
+.checklist-container { 
+  background: #fff; 
+  border: 1px solid var(--border-color); 
+  border-radius: 8px; 
+  margin: 0 40px; 
+  overflow: hidden; 
+}
 
 .checklist-item { 
   display: flex; 
@@ -100,40 +147,41 @@ header { background-color: var(--primary-navy); color: white; padding: 25px 40px
   border-bottom: 1px solid #f1f5f9; 
   background: #fff; 
   min-height: 45px; 
-  transition: background-color 0.2s ease, margin 0.3s ease;
-  position: relative; /* Adicionado para a linha de conexão */
+  transition: background-color 0.2s ease;
+  position: relative; 
 }
 
 .checklist-item:hover {
-  background-color: #f8fafc; /* Destaque visual (Ponto D) */
+  background-color: #f8fafc;
 }
 
-/* --- NOVA UI PARA SUBNÍVEIS --- */
+/* --- NOVA UI: ÁRVORE DE SUBNÍVEIS --- */
 .checklist-item.is-subtopic {
-  /* Correção do bug do corte */
-  padding-left: 60px;
+  padding-left: 64px; 
   width: 100%;
   box-sizing: border-box;
-
-  /* Refinamento Visual */
-  background-color: #f1f5f9;
-  border-left: 4px solid var(--border-color);
-  border-radius: 0;
+  background-color: #f8fafc;
 }
 
-/* Remoção da linha em 'L' antiga */
-.checklist-item.is-subtopic::before {
-  display: none;
+.tree-line {
+  position: absolute;
+  left: 28px; 
+  width: 16px; 
+  border-left: 2px solid #ef4444; 
+  border-bottom: 2px solid #ef4444; 
+  border-bottom-left-radius: 6px; 
+  z-index: 10;
+  pointer-events: none;
 }
 
-/* Redução tipográfica para reforçar hierarquia */
-.checklist-item.is-subtopic .item-title {
-  font-size: 0.88rem;
-  color: var(--text-sub);
+/* Oculta as linhas suavemente enquanto o usuário arrasta itens */
+#sortable-list.is-dragging .tree-line {
+  opacity: 0;
+  transition: opacity 0.2s;
 }
 
-.checklist-item.is-subtopic .item-title-input {
-  font-size: 0.88rem;
+.dragging-child {
+  display: none !important;
 }
 
 .drag-handle {
@@ -149,7 +197,6 @@ header { background-color: var(--primary-navy); color: white; padding: 25px 40px
   cursor: grabbing;
 }
 
-/* Novos botões de ação para os tópicos */
 .action-buttons {
   display: flex;
   gap: 6px;
@@ -170,54 +217,45 @@ header { background-color: var(--primary-navy); color: white; padding: 25px 40px
   transition: all 0.2s ease;
 }
 
-.btn-icon:hover {
-  background-color: #f1f5f9;
-}
+.btn-icon:hover { background-color: #e2e8f0; }
+.btn-icon.icon-indent:hover { color: var(--theme-orange); }
+.btn-icon.icon-edit:hover { color: var(--author-color); }
+.btn-icon.icon-delete:hover { color: var(--defendant-color); }
 
-.btn-icon.icon-indent:hover {
-  color: var(--theme-orange); /* Laranja */
+.chk-input { 
+  margin-right: 15px; 
+  width: 18px; 
+  height: 18px; 
+  cursor: pointer; 
+  accent-color: var(--success-green); 
 }
-
-.btn-icon.icon-edit:hover {
-  color: var(--author-color); /* Azul */
-}
-
-.btn-icon.icon-delete:hover {
-  color: var(--defendant-color); /* Vermelho */
-}
-
-.chk-input { margin-right: 15px; width: 18px; height: 18px; cursor: pointer; accent-color: var(--success-green); }
 
 .item-content { 
-  flex: 1 1 auto; /* Permite expansão fluida empurrando as tags */
+  flex: 1 1 auto; 
   display: flex; 
   align-items: center; 
   gap: 10px; 
   flex-wrap: wrap; 
-  margin-right: 15px; /* Espaçamento de segurança antes das tags */
+  margin-right: 15px; 
 }
 
-.item-title { font-weight: 500; color: var(--text-main); font-size: 0.95rem; }
+.item-title { 
+  font-weight: 500; 
+  color: var(--text-main); 
+  font-size: 0.95rem; 
+}
 
-/* Input para Novos Tópicos (Adição Manual) */
 .item-title-input {
-    border: none;
-    background: transparent;
-    font-size: 0.95rem;
-    font-weight: 500;
-    color: var(--text-main);
-    width: 100%;
-    outline: none;
-    border-bottom: 1px dashed transparent;
-    font-family: inherit;
-    transition: border-color 0.2s;
+  width: 100%;
+  padding: 4px 8px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  outline-color: var(--author-color);
+  font-family: inherit;
 }
 
-.item-title-input:focus {
-    border-bottom: 1px dashed #cbd5e1;
-}
-
-/* Representação Grid - Otimização Desktop (Ponto B) */
 .rep-grid { 
   display: grid; 
   grid-template-columns: 1fr 1fr; 
@@ -225,11 +263,35 @@ header { background-color: var(--primary-navy); color: white; padding: 25px 40px
   width: 100%; 
 }
 
-.rep-col { display: flex; align-items: center; background: #f8fafc; padding: 8px; border-radius: 6px; border: 1px solid #e2e8f0; }
-.rep-label { display: flex; align-items: center; font-weight: 600; font-size: 0.85rem; margin-right: 10px; white-space: nowrap; cursor: pointer; }
-.input-details { border: none; background: transparent; color: var(--text-sub); font-family: inherit; font-size: 0.85rem; flex: 1; outline: none; }
+.rep-col { 
+  display: flex; 
+  align-items: center; 
+  background: #f8fafc; 
+  padding: 8px; 
+  border-radius: 6px; 
+  border: 1px solid #e2e8f0; 
+}
 
-/* Badges & Tags */
+.rep-label { 
+  display: flex; 
+  align-items: center; 
+  font-weight: 600; 
+  font-size: 0.85rem; 
+  margin-right: 10px; 
+  white-space: nowrap; 
+  cursor: pointer; 
+}
+
+.input-details { 
+  border: none; 
+  background: transparent; 
+  color: var(--text-sub); 
+  font-family: inherit; 
+  font-size: 0.85rem; 
+  flex: 1; 
+  outline: none; 
+}
+
 .badge { 
   font-size: 0.65rem; 
   font-weight: 700; 
@@ -250,66 +312,88 @@ header { background-color: var(--primary-navy); color: white; padding: 25px 40px
 .badge-joint { background: var(--joint-bg); color: var(--joint-color); border-color: var(--joint-border); }
 
 .badge-theme-tag { 
-    background: #fff; 
-    color: var(--theme-orange); 
-    border: 1px solid var(--theme-orange); 
-    font-size: 0.65rem; font-weight: 700; padding: 3px 8px; border-radius: 4px; 
-    margin-left: auto; 
-    cursor: help;
-    white-space: nowrap;
+  background: #fff; 
+  color: var(--theme-orange); 
+  border: 1px solid var(--theme-orange); 
+  font-size: 0.65rem; 
+  font-weight: 700; 
+  padding: 3px 8px; 
+  border-radius: 4px; 
+  margin-left: auto; 
+  cursor: help;
+  white-space: nowrap;
 }
 
-/* Painel de Vinculação */
 .theme-card-top { 
-    background: var(--theme-bg-orange); 
-    border-left: 4px solid var(--theme-orange); 
-    padding: 12px 20px; 
-    margin: 0 40px 10px 40px; 
-    border-radius: 4px; 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center;
+  background: var(--theme-bg-orange); 
+  border-left: 4px solid var(--theme-orange); 
+  padding: 12px 20px; 
+  margin: 0 40px 10px 40px; 
+  border-radius: 4px; 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center;
 }
 
 .theme-info { font-size: 0.85rem; color: #9a3412; }
 .icon-theme { vertical-align: middle; margin-right: 6px; color: #9a3412; }
 
-/* Botões de Persistência e Adição */
-.btn-save-file { background: var(--success-green); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; }
-.btn-save-file svg { margin-right: 6px; }
-
-.btn-add-row { display: block; width: calc(100% - 80px); margin: 15px 40px; padding: 10px; background: #fff; border: 1px dashed #cbd5e1; border-radius: 8px; color: #64748b; font-weight: 600; cursor: pointer; text-align: center; font-size: 0.8rem;}
-
-.btn-add-topic {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    margin-top: 10px;
+.btn-save-file { 
+  background: var(--success-green); 
+  color: white; border: none; 
+  padding: 8px 16px; 
+  border-radius: 6px; 
+  font-weight: 600; 
+  cursor: pointer; 
+  font-size: 0.85rem; 
+  display: flex; 
+  align-items: center; 
+  gap: 6px; 
 }
 
-/* Drag & Drop */
+.btn-add-row { 
+  display: block; 
+  width: calc(100% - 80px); 
+  margin: 15px 40px; 
+  padding: 10px; 
+  background: #fff; 
+  border: 1px dashed #cbd5e1; 
+  border-radius: 8px; 
+  color: #64748b; 
+  font-weight: 600; 
+  cursor: pointer; 
+  text-align: center; 
+  font-size: 0.8rem;
+}
+
+.btn-add-topic {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
 .checklist-item.dragging { opacity: 0.5; background: #f1f5f9; }
 .checklist-item.completed { background-color: #f0fdf4; }
 .checklist-item.completed .item-title { color: #059669; }
 
-/* Refinamentos de Input */
 .input-block-wrapper { display: block; width: 100%; margin-top: 8px; }
 
 .input-full-width {
-    width: 100%;
-    box-sizing: border-box; 
-    padding: 8px;
-    border: 1px solid #cbd5e1;
-    border-radius: 4px;
-    background-color: #f8fafc;
-    margin-top: 4px;
-    font-size: 0.85rem;
-    color: var(--text-sub);
-    outline: none;
-    transition: border-color 0.2s;
+  width: 100%;
+  box-sizing: border-box; 
+  padding: 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  background-color: #f8fafc;
+  margin-top: 4px;
+  font-size: 0.85rem;
+  color: var(--text-sub);
+  outline: none;
+  transition: border-color 0.2s;
 }
 
 .input-full-width:focus {
-    border-color: var(--author-border);
+  border-color: var(--author-border);
 }
