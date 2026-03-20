@@ -18,9 +18,6 @@
   --theme-orange: #f97316; 
   --theme-bg-orange: #ffedd5; 
   --theme-border-orange: #fed7aa;
-  
-  /* NOVA COR: Laranja Pastel para as linhas de conexão da árvore */
-  --tree-line-color: #fdba74; 
 }
 
 body { 
@@ -166,13 +163,12 @@ header {
   background-color: #f8fafc;
 }
 
-/* Linha de conexão usando a nova cor Laranja Pastel */
 .tree-line {
   position: absolute;
-  left: 28px; /* Alinhado perfeitamente com o centro do botão de arrastar */
+  left: 28px; 
   width: 16px; 
-  border-left: 2px solid var(--tree-line-color); 
-  border-bottom: 2px solid var(--tree-line-color); 
+  border-left: 2px solid #ef4444; 
+  border-bottom: 2px solid #ef4444; 
   border-bottom-left-radius: 6px; 
   z-index: 10;
   pointer-events: none;
