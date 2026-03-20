@@ -51,10 +51,13 @@ async function generatePanel() {
 
         renderContent(data);
         
+        // --- A LINHA QUE HAVIA SIDO REMOVIDA ESTÁ DE VOLTA AQUI ---
+        await downloadBundledHTML(); 
+        
         const btn = document.querySelector('.btn-generate');
         if (btn) {
             const originalText = btn.innerText;
-            btn.innerText = "✅ Painel Gerado!";
+            btn.innerText = "✅ Arquivo Baixado!"; // Voltei o texto original de sucesso
             btn.style.backgroundColor = "#16a34a";
             setTimeout(() => {
                 btn.innerText = originalText;
