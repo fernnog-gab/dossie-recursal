@@ -51,13 +51,10 @@ async function generatePanel() {
 
         renderContent(data);
         
-        // Garante que o arquivo seja baixado automaticamente após gerar
-        await downloadBundledHTML(); 
-        
         const btn = document.querySelector('.btn-generate');
         if (btn) {
             const originalText = btn.innerText;
-            btn.innerText = "✅ Arquivo Baixado!";
+            btn.innerText = "✅ Painel Gerado!";
             btn.style.backgroundColor = "#16a34a";
             setTimeout(() => {
                 btn.innerText = originalText;
@@ -194,11 +191,10 @@ function updateTreeLines() {
                 const itemRect = item.getBoundingClientRect();
                 const prevRect = prev.getBoundingClientRect();
                 
-                // CÁLCULO GEOMÉTRICO ATUALIZADO:
-                // A linha nasce na borda inferior do item anterior (prevRect.bottom)
-                // O deslocamento negativo (offset) posiciona o "top" da linha exatamente lá.
-                const topOffset = prevRect.bottom - itemRect.top;
+                // Calcula a distância do centro do item anterior até o topo do item atual
+                const topOffset = (prevRect.top + prevRect.height / 2) - itemRect.top;
                 
+                // Desenha a linha começando do centro do item de cima
                 line.style.top = topOffset + 'px';
                 // Desce a linha até exatamente a metade (50%) do item atual
                 line.style.bottom = '50%'; 
@@ -435,7 +431,7 @@ function setupDrag() {
             dragged = target; 
             dragged.classList.add("dragging"); 
             
-            // Adiciona classe na lista pai para ocultar linhas suavemente
+            // Adiciona classe na lista pai para ocultar linhas vermelhas suavemente
             list.classList.add('is-dragging');
             
             draggedChildren = [];
