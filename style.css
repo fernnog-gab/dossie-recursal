@@ -457,3 +457,25 @@ header {
 .version-item h4 { margin: 0 0 5px 0; color: #334155; }
 .version-item span { font-size: 0.8rem; color: #94a3b8; }
 .version-item ul { margin-top: 8px; padding-left: 20px; font-size: 0.85rem; color: #475569; }
+
+/* Posicionamento do botão de histórico de versões no gerador */
+.fixed-version-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--primary-navy);
+  color: white;
+  z-index: 1000;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* Novas cores para as Badges de Sentença */
+.badge-procedente { background: #dcfce7; color: #16a34a; border-color: #bbf7d0; } /* Verde */
+.badge-parcial { background: #fef9c3; color: #ca8a04; border-color: #fef08a; } /* Amarelo */
+.badge-improcedente { background: #fee2e2; color: #dc2626; border-color: #fecaca; } /* Vermelho */
+.badge-outros { background: #f1f5f9; color: #475569; border-color: #cbd5e1; } /* Cinza */
+
+/* Novas cores para as Badges de Embargos */
+.badge-acolhido { background: #dcfce7; color: #16a34a; border-color: #bbf7d0; } /* Verde */
+.badge-rejeitado { background: #fee2e2; color: #dc2626; border-color: #fecaca; } /* Vermelho */
+.badge-parcial-acolhido { background: #fef9c3; color: #ca8a04; border-color: #fef08a; } /* Amarelo */
