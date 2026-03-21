@@ -479,3 +479,7 @@ header {
 .badge-acolhido { background: #dcfce7; color: #16a34a; border-color: #bbf7d0; } /* Verde */
 .badge-rejeitado { background: #fee2e2; color: #dc2626; border-color: #fecaca; } /* Vermelho */
 .badge-parcial-acolhido { background: #fef9c3; color: #ca8a04; border-color: #fef08a; } /* Amarelo */
+
+/* Novas cores para as Badges de Confirmação (Sim/Não) */
+.badge-sim { background: #dcfce7; color: #16a34a; border-color: #bbf7d0; } /* Verde */
+.badge-nao { background: #fee2e2; color: #dc2626; border-color: #fecaca; } /* Vermelho */
