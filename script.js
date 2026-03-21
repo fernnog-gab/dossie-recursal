@@ -62,7 +62,6 @@ async function generatePanel() {
             }, 3000);
         }
 
-        // NOVO: Gatilho automático para forçar o download assim que o painel é construído no DOM
         setTimeout(() => {
             downloadBundledHTML();
         }, 500);
@@ -160,7 +159,7 @@ function renderContent(data) {
         });
     }
     setupDrag();
-    updateTreeLines(); // Aplica as linhas ao gerar o conteúdo
+    updateTreeLines();
 }
 
 // --- 3. INICIALIZAÇÃO LIMPA E ATUALIZAÇÃO DE LINHAS ---
@@ -170,10 +169,8 @@ document.addEventListener('DOMContentLoaded', () => {
         setupDrag(); 
         updateTreeLines();
     }
-    // Garante que as linhas se ajustem caso a tela mude de tamanho
     window.addEventListener('resize', updateTreeLines);
 
-    // NOVO: Inicializa o controle de versão ao carregar a página
     if (typeof appVersions !== 'undefined' && appVersions.length > 0) {
         const currentVersion = appVersions[0].version;
         const btnVersion = document.getElementById('btn-version');
@@ -181,40 +178,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// FUNÇÃO MATEMÁTICA PARA DESENHAR AS LINHAS DA ÁRVORE (ESPINHA DORSAL) E MARCAR O PAI
 function updateTreeLines() {
     const list = document.getElementById('sortable-list');
     if (!list) return;
     const items = list.querySelectorAll('.checklist-item');
     
-    // Limpa a classe de paternidade de todos os itens antes de recalcular
     items.forEach(item => item.classList.remove('has-children'));
     
     items.forEach((item, index) => {
-        // Limpa linhas antigas
         const oldLine = item.querySelector('.tree-line');
         if (oldLine) oldLine.remove();
 
         if (item.classList.contains('is-subtopic')) {
-            // Encontra o item imediatamente anterior para servir de âncora
             const prev = items[index - 1];
             if (prev) {
-                // Marca o item de cima como "pai" para o CSS capturar
                 prev.classList.add('has-children');
 
                 const line = document.createElement('div');
                 line.className = 'tree-line';
                 
-                // Captura as caixas delimitadoras exatas
                 const itemRect = item.getBoundingClientRect();
                 const prevRect = prev.getBoundingClientRect();
                 
-                // Calcula a distância do centro do item anterior até o topo do item atual
                 const topOffset = (prevRect.top + prevRect.height / 2) - itemRect.top;
                 
-                // Desenha a linha começando do centro do item de cima
                 line.style.top = topOffset + 'px';
-                // Desce a linha até exatamente a metade (50%) do item atual
                 line.style.bottom = '50%'; 
                 
                 item.appendChild(line);
@@ -299,7 +287,7 @@ function saveTopicTitle(input) {
     const originalTooltip = input.getAttribute('data-orig-tooltip') || '';
     const contentDiv = input.closest('.item-content');
     contentDiv.innerHTML = `<span class="item-title" title="${originalTooltip}">${newTitle}</span>`;
-    updateTreeLines(); // Recalcula as linhas caso a mudança de texto tenha alterado a altura do item
+    updateTreeLines(); 
 }
 
 function toggleSubtopic(btn) {
@@ -321,7 +309,6 @@ function toggleSubtopic(btn) {
         btn.title = "Transformar em Subtópico";
     }
     
-    // Atualiza a matemática das linhas de conexão
     updateTreeLines();
 }
 
@@ -378,6 +365,9 @@ async function downloadBundledHTML() {
     const clone = document.documentElement.cloneNode(true);
     const importer = clone.querySelector('#json-importer');
     if(importer) importer.remove();
+
+    const versionBtn = clone.querySelector('#btn-version');
+    if(versionBtn) versionBtn.remove();
     
     const container = clone.querySelector('#panel-container');
     if(container) container.style.display = 'block';
@@ -435,7 +425,7 @@ async function downloadBundledHTML() {
     }
 }
 
-// --- 6. DRAG & DROP (Atualizado para Linhas Dinâmicas) ---
+// --- 6. DRAG & DROP ---
 function setupDrag() {
     const list = document.getElementById("sortable-list");
     if (!list) return;
@@ -449,7 +439,6 @@ function setupDrag() {
             dragged = target; 
             dragged.classList.add("dragging"); 
             
-            // Adiciona classe na lista pai para ocultar linhas vermelhas suavemente
             list.classList.add('is-dragging');
             
             draggedChildren = [];
@@ -469,11 +458,9 @@ function setupDrag() {
             dragged.classList.remove("dragging"); 
             dragged = null;
             
-            // Restaura a visibilidade
             draggedChildren.forEach(child => child.classList.remove("dragging-child"));
             draggedChildren = [];
             
-            // Remove a classe de proteção e recalcula as linhas após soltar
             list.classList.remove('is-dragging');
             updateTreeLines();
         }
@@ -513,7 +500,7 @@ function openVersionHistory() {
     const list = document.getElementById('version-list');
     if (!modal || !list) return;
 
-    list.innerHTML = ''; // Limpa a lista
+    list.innerHTML = ''; 
     
     if (typeof appVersions !== 'undefined') {
         appVersions.forEach(ver => {
@@ -534,4 +521,33 @@ function openVersionHistory() {
 function closeVersionHistory() {
     const modal = document.getElementById('version-modal');
     if (modal) modal.style.display = 'none';
+}
+
+// --- 8. NOVAS FUNÇÕES DE ROTAÇÃO DE BADGES (SENTENÇA / EMBARGOS) ---
+function rotateSentenceBadge(el) {
+    const states = ['badge-procedente', 'badge-parcial', 'badge-improcedente', 'badge-outros'];
+    const texts = ['PROCEDENTE', 'PARCIALMENTE PROCEDENTE', 'IMPROCEDENTE', 'OUTROS'];
+    
+    let currentIdx = states.findIndex(cls => el.classList.contains(cls));
+    if (currentIdx === -1) currentIdx = 0; // fallback
+    
+    const nextIdx = (currentIdx + 1) % states.length;
+    
+    el.classList.remove(...states);
+    el.classList.add(states[nextIdx]);
+    el.innerText = texts[nextIdx];
+}
+
+function rotateEmbargoBadge(el) {
+    const states = ['badge-acolhido', 'badge-rejeitado', 'badge-parcial-acolhido'];
+    const texts = ['ACOLHIDO', 'REJEITADO', 'PARCIALMENTE ACOLHIDO'];
+    
+    let currentIdx = states.findIndex(cls => el.classList.contains(cls));
+    if (currentIdx === -1) currentIdx = 0; // fallback
+    
+    const nextIdx = (currentIdx + 1) % states.length;
+    
+    el.classList.remove(...states);
+    el.classList.add(states[nextIdx]);
+    el.innerText = texts[nextIdx];
 }
