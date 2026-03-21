@@ -1,5 +1,14 @@
 const appVersions = [
     {
+        version: "1.0.3",
+        date: "25/03/2026",
+        features: [
+            "Sincronização inteligente de estado entre as badges de Sentença de Embargos de Declaração.",
+            "Implementação do estado visual inativo (N/A escurecido) para a badge de resultado quando a opção principal for marcada como NÃO.",
+            "Bloqueio de clique (cláusula de guarda) na badge de resultado para prevenir interações indesejadas em estados não aplicáveis."
+        ]
+    },
+    {
         version: "1.0.2",
         date: "24/03/2026",
         features: [
