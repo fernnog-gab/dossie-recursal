@@ -1,5 +1,13 @@
 const appVersions = [
     {
+        version: "1.0.2",
+        date: "24/03/2026",
+        features: [
+            "Adição de validação primária (Sim/Não) para a existência de Sentença de Embargos de Declaração.",
+            "Melhoria de UI com agrupamento em linha entre a pergunta e a nova validação."
+        ]
+    },
+    {
         version: "1.0.1",
         date: "21/03/2026",
         features: [
