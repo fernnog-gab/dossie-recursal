@@ -121,7 +121,10 @@
             <div class="checklist-item" style="flex-wrap: wrap;">
                 <input type="checkbox" class="chk-input" onchange="toggleRow(this);">
                 <div class="item-content">
-                    <span class="item-title">Sentença de embargos de declaração?</span>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="item-title">Sentença de embargos de declaração?</span>
+                        <span class="badge badge-sim" onclick="rotateSimNaoBadge(this);" title="Clique para alternar entre SIM e NÃO">SIM</span>
+                    </div>
                     <div class="input-block-wrapper">
                         <input type="text" class="input-details input-full-width" placeholder="Digite observações aqui..." oninput="this.setAttribute('value', this.value);">
                     </div>
