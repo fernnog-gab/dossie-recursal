@@ -1,4 +1,3 @@
-// versions.js
 const appVersions = [
     {
         version: "1.0.0",
@@ -10,3 +9,4 @@ const appVersions = [
             "Exportação de dossiê consolidado em HTML único (Bundler)."
         ]
     }
+];
