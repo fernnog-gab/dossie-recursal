@@ -551,3 +551,17 @@ function rotateEmbargoBadge(el) {
     el.classList.add(states[nextIdx]);
     el.innerText = texts[nextIdx];
 }
+
+function rotateSimNaoBadge(el) {
+    const states = ['badge-sim', 'badge-nao'];
+    const texts = ['SIM', 'NÃO'];
+    
+    let currentIdx = states.findIndex(cls => el.classList.contains(cls));
+    if (currentIdx === -1) currentIdx = 0; // fallback
+    
+    const nextIdx = (currentIdx + 1) % states.length;
+    
+    el.classList.remove(...states);
+    el.classList.add(states[nextIdx]);
+    el.innerText = texts[nextIdx];
+}
