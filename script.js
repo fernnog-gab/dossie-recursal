@@ -172,6 +172,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     // Garante que as linhas se ajustem caso a tela mude de tamanho
     window.addEventListener('resize', updateTreeLines);
+
+    // NOVO: Inicializa o controle de versão ao carregar a página
+    if (typeof appVersions !== 'undefined' && appVersions.length > 0) {
+        const currentVersion = appVersions[0].version;
+        const btnVersion = document.getElementById('btn-version');
+        if (btnVersion) btnVersion.innerText = `v${currentVersion}`;
+    }
 });
 
 // FUNÇÃO MATEMÁTICA PARA DESENHAR AS LINHAS DA ÁRVORE (ESPINHA DORSAL) E MARCAR O PAI
@@ -498,4 +505,33 @@ function setupDrag() {
             });
         }
     };
+}
+
+// --- 7. CONTROLE DE VERSÕES E HISTÓRICO ---
+function openVersionHistory() {
+    const modal = document.getElementById('version-modal');
+    const list = document.getElementById('version-list');
+    if (!modal || !list) return;
+
+    list.innerHTML = ''; // Limpa a lista
+    
+    if (typeof appVersions !== 'undefined') {
+        appVersions.forEach(ver => {
+            const liItems = ver.features.map(f => `<li>${f}</li>`).join('');
+            list.innerHTML += `
+                <div class="version-item">
+                    <h4>Versão ${ver.version}</h4>
+                    <span>${ver.date}</span>
+                    <ul>${liItems}</ul>
+                </div>
+            `;
+        });
+    }
+    
+    modal.style.display = 'flex';
+}
+
+function closeVersionHistory() {
+    const modal = document.getElementById('version-modal');
+    if (modal) modal.style.display = 'none';
 }
