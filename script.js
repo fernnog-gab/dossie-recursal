@@ -1,3 +1,8 @@
+// --- GERADOR DE ID ESTÁVEL PARA TÓPICOS ---
+function generateTopicId() {
+    return 'tp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+}
+
 // --- CONSTANTES E ÍCONES ---
 const SVG_BALANCE = `<svg class="icon-theme" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 6px; color: #9a3412;"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>`;
 
@@ -100,14 +105,81 @@ function renderContent(data) {
     admGenContainer.innerHTML = '';
     
     const admData = data.admissibilidade || {};
-    const admItems = [
-        { t: 'Tempestividade', v: admData.tempestividade },
-        { t: 'Preparo Recursal', v: admData.preparo }
-    ];
+    const tempValue = admData.tempestividade || '';
     
-    admItems.forEach(item => {
-        admGenContainer.innerHTML += createRowHTML(item.t, item.v);
-    });
+    let admHTML = `
+        <div class="tempestividade-wrapper">
+            <div class="temp-header">
+                <input type="checkbox" class="chk-input" checked onchange="toggleRow(this);">
+                <span class="item-title">Tempestividade e Prazos</span>
+            </div>
+            ${tempValue ? `<div class="temp-context-note">
+                <span class="temp-context-label">Contexto extraído pelo Gemini:</span>
+                <input type="text" class="input-details" style="font-size:0.82rem;" value="${tempValue.replace(/"/g, '&quot;')}" oninput="this.setAttribute('value', this.value);">
+            </div>` : ''}
+
+            <div class="sub-section-divider">
+                <label class="toggle-switch-container">
+                    <input type="checkbox" id="chk-ed" onchange="toggleForm('form-ed', this.checked)">
+                    <span>Embargos de Declaração</span>
+                </label>
+            </div>
+            <div id="form-ed" class="sub-form-row disabled">
+                <div class="sub-form-col">
+                    <label>Prazo ED</label>
+                    <input type="text" class="input-details input-full-width" placeholder="Ex: 05 dias úteis" oninput="this.setAttribute('value', this.value);">
+                </div>
+                <div class="sub-form-col">
+                    <label>Data dos Embargos de Declaração</label>
+                    <input type="text" class="input-details input-full-width" placeholder="DD/MM/AAAA" oninput="this.setAttribute('value', this.value);">
+                </div>
+            </div>
+
+            <div class="sub-section-divider">
+                <label class="toggle-switch-container">
+                    <input type="checkbox" id="chk-ro" checked onchange="toggleForm('form-ro', this.checked)">
+                    <span>Recurso Ordinário</span>
+                </label>
+            </div>
+            <div id="form-ro" class="sub-form-row">
+                <div class="sub-form-col">
+                    <label>Prazo Recursal (Comum)</label>
+                    <input type="text" class="input-details input-full-width" placeholder="Ex: 08 dias úteis" oninput="this.setAttribute('value', this.value);">
+                </div>
+                <div class="sub-form-col">
+                    <label>Data Recurso — Parte Autora</label>
+                    <input type="text" class="input-details input-full-width" placeholder="DD/MM/AAAA" oninput="this.setAttribute('value', this.value);">
+                </div>
+                <div class="sub-form-col">
+                    <label>Data Recurso — Parte Ré</label>
+                    <input type="text" class="input-details input-full-width" placeholder="DD/MM/AAAA" oninput="this.setAttribute('value', this.value);">
+                </div>
+            </div>
+
+            <div class="sub-section-divider">
+                <label class="toggle-switch-container">
+                    <input type="checkbox" id="chk-cr" onchange="toggleForm('form-cr', this.checked)">
+                    <span>Contrarrazões</span>
+                </label>
+            </div>
+            <div id="form-cr" class="sub-form-row disabled">
+                <div class="sub-form-col">
+                    <label>Prazo das Contrarrazões</label>
+                    <input type="text" class="input-details input-full-width" placeholder="Ex: 08 dias úteis" oninput="this.setAttribute('value', this.value);">
+                </div>
+                <div class="sub-form-col">
+                    <label>Data CR — Parte Autora</label>
+                    <input type="text" class="input-details input-full-width" placeholder="DD/MM/AAAA" oninput="this.setAttribute('value', this.value);">
+                </div>
+                <div class="sub-form-col">
+                    <label>Data CR — Parte Ré</label>
+                    <input type="text" class="input-details input-full-width" placeholder="DD/MM/AAAA" oninput="this.setAttribute('value', this.value);">
+                </div>
+            </div>
+        </div>
+    `;
+    admHTML += createRowHTML('Preparo Recursal', admData.preparo || '');
+    admGenContainer.innerHTML = admHTML;
 
     const repData = admData.representacao || {};
     
@@ -122,8 +194,10 @@ function renderContent(data) {
     const topicContainer = document.getElementById('sortable-list');
     topicContainer.innerHTML = '';
     
+    let topicsHTML = '';
     if(data.topicos_do_recurso && Array.isArray(data.topicos_do_recurso)) { 
         data.topicos_do_recurso.forEach(topic => {
+            const topicId = generateTopicId();
             let partyClass = 'badge-author'; 
             let partyText = 'AUTOR';
             
@@ -138,8 +212,8 @@ function renderContent(data) {
 
             let themeBadgeHTML = topic.tema_numero ? `<span class="badge-theme-tag">${topic.tema_numero}</span>` : '';
 
-            topicContainer.innerHTML += `
-                <div class="checklist-item" draggable="true">
+            topicsHTML += `
+                <div class="checklist-item" draggable="true" data-topic-id="${topicId}">
                     ${SVG_DRAG_HANDLE}
                     <div class="action-buttons">
                         <button class="btn-icon icon-indent" onclick="toggleSubtopic(this)" title="Transformar em Subtópico">${SVG_INDENT}</button>
@@ -158,6 +232,7 @@ function renderContent(data) {
             `;
         });
     }
+    topicContainer.innerHTML = topicsHTML;
     setupDrag();
     updateTreeLines();
 }
@@ -209,6 +284,7 @@ function updateTreeLines() {
             }
         }
     });
+    syncSentenceTopics();
 }
 
 // --- 4. HELPERS DE INTERAÇÃO ---
@@ -263,6 +339,7 @@ function rotateBadge(el) {
     el.classList.remove(...states);
     el.classList.add(states[nextIdx]);
     el.innerText = texts[nextIdx];
+    syncSentenceTopics(); // propaga a mudança de polo para a seção de Sentenças
 }
 
 function toggleRow(chk) {
@@ -333,7 +410,8 @@ function addNewTopic() {
     
     const div = document.createElement('div');
     div.className = 'checklist-item';
-    div.setAttribute('draggable', 'true'); 
+    div.setAttribute('draggable', 'true');
+    div.dataset.topicId = generateTopicId();
     
     div.innerHTML = `
         ${SVG_DRAG_HANDLE}
@@ -522,6 +600,131 @@ function closeVersionHistory() {
     const modal = document.getElementById('version-modal');
     if (modal) modal.style.display = 'none';
 }
+
+// --- NOVA SEÇÃO 8: SINCRONIZAÇÃO INTELIGENTE DE SENTENÇAS ---
+
+/**
+ * Atualização INCREMENTAL: nunca destrói dados já preenchidos.
+ * Usa data-topic-id (na Trilha) e data-sync-id (nas Sentenças) como chave estável.
+ * Opera em 3 fases: REMOVER itens obsoletos → CRIAR/ATUALIZAR itens → REORDENAR.
+ */
+function syncSentenceTopics() {
+    const container = document.getElementById('dynamic-sentence-topics');
+    if (!container) return;
+
+    const trilhaItems = Array.from(
+        document.querySelectorAll('#sortable-list .checklist-item')
+    );
+
+    const placeholder = container.querySelector('.sync-placeholder');
+
+    // Fase 1 — REMOVER sync items cujos tópicos foram excluídos da Trilha
+    const activeIds = new Set(
+        trilhaItems.map(item => item.dataset.topicId).filter(Boolean)
+    );
+    container.querySelectorAll('.sentence-topic-sync[data-sync-id]').forEach(el => {
+        if (!activeIds.has(el.dataset.syncId)) el.remove();
+    });
+
+    // Controle do placeholder
+    if (trilhaItems.length === 0) {
+        if (placeholder) placeholder.style.display = 'block';
+        return;
+    }
+    if (placeholder) placeholder.style.display = 'none';
+
+    // Fase 2 — CRIAR ou ATUALIZAR cada sync item (sem tocar em inputs/badges de resultado)
+    trilhaItems.forEach(item => {
+        const id = item.dataset.topicId;
+        if (!id) return;
+
+        const titleSpan = item.querySelector('.item-title');
+        const title = titleSpan ? titleSpan.textContent.trim() : 'Tópico sem nome';
+        const isSub = item.classList.contains('is-subtopic');
+
+        // Lê o polo (AUTOR / RÉU / AMBOS) do badge da Trilha
+        const partyBadgeEl = item.querySelector('.badge-author, .badge-defendant, .badge-joint');
+        let partyClass = 'badge-author';
+        let partyText = 'AUTOR';
+        if (partyBadgeEl) {
+            if (partyBadgeEl.classList.contains('badge-defendant')) { partyClass = 'badge-defendant'; partyText = 'RÉU'; }
+            else if (partyBadgeEl.classList.contains('badge-joint')) { partyClass = 'badge-joint'; partyText = 'AMBOS'; }
+            else { partyText = partyBadgeEl.textContent.trim(); }
+        }
+
+        let syncItem = container.querySelector(`.sentence-topic-sync[data-sync-id="${id}"]`);
+
+        if (!syncItem) {
+            // CRIAR — apenas quando o item ainda não existe
+            syncItem = document.createElement('div');
+            syncItem.className = 'checklist-item sentence-topic-sync';
+            syncItem.dataset.syncId = id;
+            syncItem.innerHTML = `
+                <div class="item-content" style="flex-direction: column; align-items: flex-start; gap: 6px;">
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <span class="sync-title item-title" style="font-size: 0.85rem;"></span>
+                        <span class="badge badge-mini-party" style="cursor: default;"></span>
+                    </div>
+                    <input type="text" class="input-details input-full-width"
+                           placeholder="Observações sobre o resultado deste tópico..."
+                           oninput="this.setAttribute('value', this.value);">
+                </div>
+                <span class="badge badge-procedente"
+                      onclick="rotateSentenceBadge(this);"
+                      title="Clique para alternar o resultado">PROCEDENTE</span>
+            `;
+            container.appendChild(syncItem);
+        }
+
+        // ATUALIZAR — apenas título e polo (nunca inputs ou badge de resultado)
+        const titleEl = syncItem.querySelector('.sync-title');
+        if (titleEl) titleEl.textContent = title;
+
+        const miniParty = syncItem.querySelector('.badge-mini-party');
+        if (miniParty) {
+            miniParty.className = `badge badge-mini-party ${partyClass}`;
+            miniParty.textContent = partyText;
+        }
+
+        syncItem.style.marginLeft = isSub ? '40px' : '0px';
+    });
+
+    // Fase 3 — REORDENAR para espelhar a ordem da Trilha (appendChild move sem recriar)
+    trilhaItems.forEach(item => {
+        const id = item.dataset.topicId;
+        if (!id) return;
+        const syncItem = container.querySelector(`.sentence-topic-sync[data-sync-id="${id}"]`);
+        if (syncItem) container.appendChild(syncItem);
+    });
+}
+
+/**
+ * Ativa ou desativa um bloco de formulário da Tempestividade.
+ * CORRIGIDO: usa setAttribute para garantir a captura pelo exportador de HTML.
+ */
+window.toggleForm = function(formId, isChecked) {
+    const form = document.getElementById(formId);
+    if (!form) return;
+
+    if (isChecked) {
+        form.classList.remove('disabled');
+        form.querySelectorAll('input[type="text"]').forEach(input => {
+            input.disabled = false;
+            // Limpa o marcador 'N/A' tanto na propriedade quanto no atributo
+            if (input.value === 'N/A') {
+                input.value = '';
+                input.setAttribute('value', '');
+            }
+        });
+    } else {
+        form.classList.add('disabled');
+        form.querySelectorAll('input[type="text"]').forEach(input => {
+            input.disabled = true;
+            input.value = 'N/A';
+            input.setAttribute('value', 'N/A'); // ← garante captura no export
+        });
+    }
+};
 
 // --- 8. NOVAS FUNÇÕES DE ROTAÇÃO DE BADGES (SENTENÇA / EMBARGOS) ---
 function rotateSentenceBadge(el) {

@@ -80,12 +80,62 @@
             </div>
         </div>
 
-        <div class="section-title">2. Painel de Temas Vinculantes</div>
+        <div class="section-title">2. Informações sobre Sentenças</div>
+        <div class="checklist-container" id="sentences-list">
+
+            <div class="checklist-item" style="flex-wrap: wrap; align-items: flex-start;">
+                <input type="checkbox" class="chk-input" style="margin-top: 5px;" onchange="toggleRow(this);">
+                <div class="item-content" style="flex-direction: column; align-items: flex-start; gap: 6px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="item-title">Qual foi o resultado global da sentença?</span>
+                        <span class="badge badge-procedente" onclick="rotateSentenceBadge(this);" title="Clique para alternar o resultado">PROCEDENTE</span>
+                    </div>
+                    <div class="input-block-wrapper">
+                        <input type="text" class="input-details input-full-width" placeholder="Digite observações gerais aqui..." oninput="this.setAttribute('value', this.value);">
+                    </div>
+                </div>
+            </div>
+
+            <div id="dynamic-sentence-topics">
+                <div class="sync-section-header">Resultado por Tópico da Trilha de Julgamento</div>
+                <div class="sync-placeholder">Os tópicos adicionados na Trilha de Julgamento aparecerão aqui automaticamente.</div>
+            </div>
+
+            <div class="checklist-item" style="flex-wrap: wrap; align-items: flex-start;">
+                <input type="checkbox" class="chk-input" style="margin-top: 5px;" onchange="toggleRow(this);">
+                <div class="item-content" style="flex-direction: column; align-items: flex-start; gap: 6px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="item-title">Justiça gratuita?</span>
+                        <span class="badge badge-sim" onclick="rotateSimNaoBadge(this);" title="Clique para alternar entre SIM e NÃO">SIM</span>
+                    </div>
+                    <div class="input-block-wrapper">
+                        <input type="text" class="input-details input-full-width" placeholder="Observações sobre justiça gratuita..." oninput="this.setAttribute('value', this.value);">
+                    </div>
+                </div>
+            </div>
+
+            <div class="checklist-item" style="flex-wrap: wrap; align-items: flex-start;">
+                <input type="checkbox" class="chk-input" style="margin-top: 5px;" onchange="toggleRow(this);">
+                <div class="item-content" style="flex-direction: column; align-items: flex-start; gap: 6px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="item-title">Sentença de embargos de declaração?</span>
+                        <span class="badge badge-sim" onclick="rotateSimNaoBadge(this);" title="Clique para alternar entre SIM e NÃO">SIM</span>
+                        <span class="badge badge-acolhido badge-resultado-embargo" onclick="rotateEmbargoBadge(this);" title="Clique para alternar o resultado">ACOLHIDO</span>
+                    </div>
+                    <div class="input-block-wrapper">
+                        <input type="text" class="input-details input-full-width" placeholder="Observações dos embargos de declaração..." oninput="this.setAttribute('value', this.value);">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="section-title">3. Painel de Temas Vinculantes</div>
         <div id="theme-panel"></div>
 
-        <div class="section-title">3. Trilha de Julgamento (Arraste para Reordenar)</div>
+        <div class="section-title">4. Trilha de Julgamento (Arraste para Reordenar)</div>
         <div class="checklist-container" id="sortable-list"></div>
-        
+
         <button class="btn-add-row btn-add-topic" onclick="addNewTopic()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -93,46 +143,6 @@
             </svg>
             ADICIONAR NOVO TÓPICO
         </button>
-
-        <div class="section-title">4. Informações sobre Sentenças</div>
-        <div class="checklist-container" id="sentences-list">
-            
-            <div class="checklist-item" style="flex-wrap: wrap;">
-                <input type="checkbox" class="chk-input" onchange="toggleRow(this);">
-                <div class="item-content">
-                    <span class="item-title">Qual foi o resultado da sentença?</span>
-                    <div class="input-block-wrapper">
-                        <input type="text" class="input-details input-full-width" placeholder="Digite observações aqui..." oninput="this.setAttribute('value', this.value);">
-                    </div>
-                </div>
-                <span class="badge badge-procedente" onclick="rotateSentenceBadge(this);" title="Clique para alternar o resultado">PROCEDENTE</span>
-            </div>
-
-            <div class="checklist-item" style="flex-wrap: wrap;">
-                <input type="checkbox" class="chk-input" onchange="toggleRow(this);">
-                <div class="item-content" style="width: calc(100% - 40px);">
-                    <span class="item-title">Justiça gratuita?</span>
-                    <div class="input-block-wrapper">
-                        <input type="text" class="input-details input-full-width" placeholder="Digite observações aqui..." oninput="this.setAttribute('value', this.value);">
-                    </div>
-                </div>
-            </div>
-
-            <div class="checklist-item" style="flex-wrap: wrap;">
-                <input type="checkbox" class="chk-input" onchange="toggleRow(this);">
-                <div class="item-content">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span class="item-title">Sentença de embargos de declaração?</span>
-                        <span class="badge badge-sim" onclick="rotateSimNaoBadge(this);" title="Clique para alternar entre SIM e NÃO">SIM</span>
-                    </div>
-                    <div class="input-block-wrapper">
-                        <input type="text" class="input-details input-full-width" placeholder="Digite observações aqui..." oninput="this.setAttribute('value', this.value);">
-                    </div>
-                </div>
-                <span class="badge badge-acolhido badge-resultado-embargo" onclick="rotateEmbargoBadge(this);" title="Clique para alternar o resultado">ACOLHIDO</span>
-            </div>
-
-        </div>
 
         <div class="section-title">5. Observações Gerais</div>
         <div class="checklist-container" id="obs-list"></div>

@@ -480,3 +480,132 @@ header {
     cursor: not-allowed; 
     opacity: 0.8;
 }
+
+/* =========================================
+   TEMPESTIVIDADE AVANÇADA
+   ========================================= */
+.tempestividade-wrapper {
+    padding: 15px 20px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.temp-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.temp-context-note {
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-bottom: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.temp-context-label {
+    font-size: 0.68rem;
+    color: #0369a1;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.sub-section-divider {
+    border-top: 1px dashed #e2e8f0;
+    padding-top: 10px;
+    margin-top: 10px;
+}
+
+.toggle-switch-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-main);
+    cursor: pointer;
+    margin-bottom: 8px;
+}
+
+.toggle-switch-container input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--theme-orange);
+    flex-shrink: 0;
+}
+
+.sub-form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 4px;
+    padding-left: 24px;
+    transition: opacity 0.25s ease;
+}
+
+.sub-form-row.disabled {
+    opacity: 0.35;
+    pointer-events: none;
+}
+
+.sub-form-col {
+    flex: 1;
+    min-width: 140px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.sub-form-col label {
+    font-size: 0.7rem;
+    color: var(--text-sub);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.35px;
+}
+
+/* =========================================
+   SINCRONIZAÇÃO DE TÓPICOS — SENTENÇAS
+   ========================================= */
+.sync-section-header {
+    padding: 6px 20px;
+    font-size: 0.7rem;
+    color: var(--text-sub);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: #f8fafc;
+    border-top: 1px solid #f1f5f9;
+    border-bottom: 1px dashed #e2e8f0;
+}
+
+.sync-placeholder {
+    padding: 14px 20px;
+    color: #94a3b8;
+    font-size: 0.82rem;
+    text-align: center;
+    font-style: italic;
+}
+
+.sentence-topic-sync {
+    border-left: 3px solid var(--theme-orange);
+    background: #fffdf9;
+    transition: background-color 0.2s;
+}
+
+.sentence-topic-sync:hover {
+    background-color: #fff8f0;
+}
+
+.badge-mini-party {
+    font-size: 0.58rem;
+    padding: 2px 6px;
+    cursor: default !important;
+    flex-shrink: 0;
+}
