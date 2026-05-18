@@ -107,16 +107,14 @@ function renderContent(data) {
     const admData = data.admissibilidade || {};
     const tempValue = admData.tempestividade || '';
     
+    // Adicionamos a classe 'completed' direto no estado inicial.
+    // O condicional que gerava o bloco .temp-context-note foi removido.
     let admHTML = `
-        <div class="tempestividade-wrapper">
+        <div class="tempestividade-wrapper completed">
             <div class="temp-header">
                 <input type="checkbox" class="chk-input" checked onchange="toggleRow(this);">
                 <span class="item-title">Tempestividade e Prazos</span>
             </div>
-            ${tempValue ? `<div class="temp-context-note">
-                <span class="temp-context-label">Contexto extraído pelo Gemini:</span>
-                <input type="text" class="input-details" style="font-size:0.82rem;" value="${tempValue.replace(/"/g, '&quot;')}" oninput="this.setAttribute('value', this.value);">
-            </div>` : ''}
 
             <div class="sub-section-divider">
                 <label class="toggle-switch-container">
@@ -130,7 +128,11 @@ function renderContent(data) {
                     <input type="text" class="input-details input-full-width" placeholder="Ex: 05 dias úteis" oninput="this.setAttribute('value', this.value);">
                 </div>
                 <div class="sub-form-col">
-                    <label>Data dos Embargos de Declaração</label>
+                    <label>Data ED — Parte Autora</label>
+                    <input type="text" class="input-details input-full-width" placeholder="DD/MM/AAAA" oninput="this.setAttribute('value', this.value);">
+                </div>
+                <div class="sub-form-col">
+                    <label>Data ED — Parte Ré</label>
                     <input type="text" class="input-details input-full-width" placeholder="DD/MM/AAAA" oninput="this.setAttribute('value', this.value);">
                 </div>
             </div>
@@ -342,10 +344,26 @@ function rotateBadge(el) {
     syncSentenceTopics(); // propaga a mudança de polo para a seção de Sentenças
 }
 
+// ATUALIZAR: Garante que o checkbox funcione em listas ou no wrapper isolado
 function toggleRow(chk) {
-    const item = chk.closest('.checklist-item');
+    const item = chk.closest('.checklist-item') || chk.closest('.tempestividade-wrapper');
     if(item) chk.checked ? item.classList.add('completed') : item.classList.remove('completed');
 }
+
+// NOVA FUNÇÃO: Manipulador visual do componente sanfonado
+window.toggleSyncItem = function(headerDiv) {
+    // Busca os nós relativos dentro do card atual
+    const body = headerDiv.nextElementSibling;
+    const icon = headerDiv.querySelector('.chevron-icon');
+    
+    if (body.style.display === 'none') {
+        body.style.display = 'block';
+        icon.style.transform = 'rotate(90deg)'; // Seta aponta para baixo
+    } else {
+        body.style.display = 'none';
+        icon.style.transform = 'rotate(0deg)'; // Seta aponta para a direita
+    }
+};
 
 function editTopicTitle(btn) {
     const contentDiv = btn.closest('.checklist-item').querySelector('.item-content');
@@ -655,23 +673,31 @@ function syncSentenceTopics() {
         let syncItem = container.querySelector(`.sentence-topic-sync[data-sync-id="${id}"]`);
 
         if (!syncItem) {
-            // CRIAR — apenas quando o item ainda não existe
+            // CRIAR — Arquitetura isolada de Header (Flex) e Body (Hidden)
+            // Uso de event.stopPropagation() na badge para não disparar o toggle do header
             syncItem = document.createElement('div');
             syncItem.className = 'checklist-item sentence-topic-sync';
             syncItem.dataset.syncId = id;
             syncItem.innerHTML = `
-                <div class="item-content" style="flex-direction: column; align-items: flex-start; gap: 6px;">
-                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                        <span class="sync-title item-title" style="font-size: 0.85rem;"></span>
+                <div class="item-content" style="flex-direction: column; align-items: flex-start; gap: 0; width: 100%;">
+                    
+                    <div class="sync-header" onclick="toggleSyncItem(this)" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; width: 100%; cursor: pointer; padding: 4px 0;">
+                        <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s; flex-shrink: 0;"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                        <span class="sync-title item-title" style="font-size: 0.85rem; flex: 1;"></span>
                         <span class="badge badge-mini-party" style="cursor: default;"></span>
+                        <span class="badge badge-procedente" 
+                              onclick="event.stopPropagation(); rotateSentenceBadge(this);" 
+                              title="Clique para alternar o resultado" 
+                              style="margin-left: auto;">PROCEDENTE</span>
                     </div>
-                    <input type="text" class="input-details input-full-width"
-                           placeholder="Observações sobre o resultado deste tópico..."
-                           oninput="this.setAttribute('value', this.value);">
+
+                    <div class="sync-item-body" style="display: none; width: 100%; padding-left: 24px; box-sizing: border-box; margin-top: 6px;">
+                        <input type="text" class="input-details input-full-width"
+                               placeholder="Observações sobre o resultado deste tópico..."
+                               oninput="this.setAttribute('value', this.value);">
+                    </div>
+
                 </div>
-                <span class="badge badge-procedente"
-                      onclick="rotateSentenceBadge(this);"
-                      title="Clique para alternar o resultado">PROCEDENTE</span>
             `;
             container.appendChild(syncItem);
         }

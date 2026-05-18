@@ -489,6 +489,17 @@ header {
     border-bottom: 1px solid #f1f5f9;
 }
 
+/* Adicione apenas as regras referentes ao estado concluído/ativo */
+.tempestividade-wrapper.completed {
+    background-color: #f0fdf4;
+}
+
+.tempestividade-wrapper.completed .item-title {
+    color: #059669;
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+
 .temp-header {
     display: flex;
     align-items: center;
